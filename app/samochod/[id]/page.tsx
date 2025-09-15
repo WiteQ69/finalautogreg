@@ -149,25 +149,29 @@ export default async function CarPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* Najważniejsze */}
-        {facts.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold mb-4">Najważniejsze</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {facts.map((f, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition"
-                >
-                  <div className="mx-auto mb-3 w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700">
-                    {f.icon}
-                  </div>
-                  <div className="text-sm text-zinc-500">{f.label}</div>
-                  <div className="text-lg font-semibold mt-1">{f.value}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+{facts.length > 0 && (
+  <section className="mt-10">
+    <h2 className="text-xl font-semibold mb-4">Najważniejsze</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {facts.map((f, i) => (
+        <div
+          key={i}
+          className="rounded-2xl border p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition"
+        >
+          <div className="mx-auto mb-3 w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700">
+            {f.icon}
+          </div>
+          <div className="text-sm text-zinc-500">{f.label}</div>
+          {/* TU DODAJEMY uppercase */}
+          <div className="text-lg font-semibold mt-1 uppercase tracking-wide">
+            {f.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
 
         {/* Opis */}
         {car.description && (

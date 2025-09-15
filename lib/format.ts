@@ -22,11 +22,11 @@ export function formatYear(year?: number): string {
 export function getFuelTypeLabel(fuelType?: string): string {
   if (!fuelType) return '—';
   const labels: Record<string, string> = {
-    gasoline: 'Benzyna', benzyna: 'Benzyna',
-    diesel: 'Diesel',
-    hybrid: 'Hybryda', hybryda: 'Hybryda',
-    electric: 'Elektryczny', elektryczny: 'Elektryczny',
-    lpg: 'LPG', benzyna_lpg: 'Benzyna + LPG',
+    gasoline: 'BENZYNA', benzyna: 'BENZYNA',
+    diesel: 'DIESEL',
+    hybrid: 'HYBRYDA', hybryda: 'HYBRYDA',
+    electric: 'ELEKTRYCZNY', elektryczny: 'ELEKTRYCZNY',
+    lpg: 'LPG', benzyna_lpg: 'BENZYNA + LPG',
   };
   return labels[fuelType] || fuelType;
 }
@@ -35,19 +35,19 @@ export function getTransmissionLabel(transmission?: string): string {
   if (!transmission) return '—';
   const labels: Record<string, string> = {
     manual: 'Manualna', manualna: 'Manualna',
-    automatic: 'Automatyczna', automatyczna: 'Automatyczna',
+    automatic: 'AUTOMATYCZNA', automatyczna: 'AUTOMATYCZNA',
   };
   return labels[transmission] || transmission;
 }
 
 export function getBodyTypeLabel(bodyType: string): string {
   const labels: Record<string, string> = {
-    sedan: 'Sedan',
-    estate: 'Kombi',
+    sedan: 'SEDAN',
+    estate: 'KOMBI',
     suv: 'SUV',
-    coupe: 'Coupe',
-    hatchback: 'Hatchback',
-    convertible: 'Cabrio',
+    coupe: 'COUPE',
+    hatchback: 'HATCHBACK',
+    convertible: 'CABRIO',
   };
   return labels[bodyType] || bodyType;
 }
