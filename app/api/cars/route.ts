@@ -1,45 +1,62 @@
+// app/api/cars/route.ts
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// camelCase -> snake_case (do bazy)
-function toDb(car: any) {
+// --- helper: lazy server client (service role) ---
+function getSupabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error(
+      'Missing SUPABASE env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)'
+    );
+  }
+  return createClient(url, serviceKey, { auth: { persistSession: false } });
+}
+
+// camelCase -> snake_case (insert/update payload)
+function toDb(patch: any) {
   return {
-    id: String(car.id ?? Date.now()),
-    title: car.title ?? null,
-    brand: car.brand ?? null,
-    model: car.model ?? null,
-    year: car.year ?? null,
-    mileage: car.mileage ?? null,
-    engine: car.engine ?? null,
-    engine_capacity_ccm: car.engineCapacityCcm ?? null,
-    power_kw: car.powerKw ?? null,
-    fuel_type: car.fuelType ?? null,
-    transmission: car.transmission ?? null,
-    drivetrain: car.drivetrain ?? null,
-    body_type: car.bodyType ?? null,
-    color: car.color ?? null,
-    doors: car.doors ?? null,
-    seats: car.seats ?? null,
-    condition: car.condition ?? null,
-    origin: car.origin ?? null,
-    registered_in: car.registeredIn ?? null,
-    sale_document: car.saleDocument ?? null,
-    price_text: car.price_text ?? null,
-    status: car.status ?? null,
-    first_owner: !!car.firstOwner,
-    main_image_path: car.main_image_path ?? null,
-    images: Array.isArray(car.images) ? car.images.map(String) : [],
-    video_url: car.video_url ?? null,
-    equipment: Array.isArray(car.equipment) ? car.equipment.map(String) : [],
-    created_at: car.createdAt ?? new Date().toISOString(),
+    ...(patch.id !== undefined && { id: patch.id }),
+    ...(patch.title !== undefined && { title: patch.title }),
+    ...(patch.brand !== undefined && { brand: patch.brand }),
+    ...(patch.model !== undefined && { model: patch.model }),
+    ...(patch.year !== undefined && { year: patch.year }),
+    ...(patch.mileage !== undefined && { mileage: patch.mileage }),
+    ...(patch.engine !== undefined && { engine: patch.engine }),
+    ...(patch.engineCapacityCcm !== undefined && { engine_capacity_ccm: patch.engineCapacityCcm }),
+    ...(patch.powerKw !== undefined && { power_kw: patch.powerKw }),
+    ...(patch.fuelType !== undefined && { fuel_type: patch.fuelType }),
+    ...(patch.transmission !== undefined && { transmission: patch.transmission }),
+    ...(patch.drivetrain !== undefined && { drivetrain: patch.drivetrain }),
+    ...(patch.bodyType !== undefined && { body_type: patch.bodyType }),
+    ...(patch.color !== undefined && { color: patch.color }),
+    ...(patch.doors !== undefined && { doors: patch.doors }),
+    ...(patch.seats !== undefined && { seats: patch.seats }),
+    ...(patch.condition !== undefined && { condition: patch.condition }),
+    ...(patch.origin !== undefined && { origin: patch.origin }),
+    ...(patch.registeredIn !== undefined && { registered_in: patch.registeredIn }),
+    ...(patch.saleDocument !== undefined && { sale_document: patch.saleDocument }),
+    ...(patch.price_text !== undefined && { price_text: patch.price_text }),
+    ...(patch.status !== undefined && { status: patch.status }),
+    ...(patch.firstOwner !== undefined && { first_owner: !!patch.firstOwner }),
+    ...(patch.main_image_path !== undefined && { main_image_path: patch.main_image_path }),
+    ...(patch.images !== undefined && {
+      images: Array.isArray(patch.images) ? patch.images.map(String) : [],
+    }),
+    ...(patch.video_url !== undefined && { video_url: patch.video_url }),
+    ...(patch.equipment !== undefined && {
+      equipment: Array.isArray(patch.equipment) ? patch.equipment.map(String) : [],
+    }),
+    ...(patch.createdAt !== undefined && { created_at: patch.createdAt }),
     updated_at: new Date().toISOString(),
   };
 }
 
-// snake_case -> camelCase (dla frontu)
+// snake_case -> camelCase (response)
 function fromDb(row: any) {
   if (!row) return row;
   return {
@@ -75,27 +92,39 @@ function fromDb(row: any) {
   };
 }
 
+/* ---------------- GET: lista aut ---------------- */
 export async function GET() {
-  const { data, error } = await supabaseServer
-    .from('cars')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('cars')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('GET /api/cars error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('GET /api/cars error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json((data ?? []).map(fromDb));
+  } catch (e: any) {
+    console.error('GET /api/cars fatal:', e);
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
   }
-  return NextResponse.json((data ?? []).map(fromDb));
 }
 
+/* ---------------- POST: dodaj auto ---------------- */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const payload = toDb(body);
 
-    const { data, error } = await supabaseServer
+    // zapewnij ID jeśli nie ma
+    const id = body?.id ?? String(Date.now());
+    const payload = toDb({ ...body, id, createdAt: new Date().toISOString() });
+
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
       .from('cars')
-      .insert([payload])
+      .insert(payload)
       .select()
       .single();
 
@@ -103,6 +132,7 @@ export async function POST(req: Request) {
       console.error('POST /api/cars insert error:', error, 'payload:', payload);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
     return NextResponse.json(fromDb(data), { status: 201 });
   } catch (e: any) {
     console.error('POST /api/cars catch:', e);

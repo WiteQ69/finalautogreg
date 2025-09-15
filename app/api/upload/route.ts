@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { getSupabaseServer } from '@/lib/supabase-server';
 
 
 export const runtime = 'nodejs';
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = `${Date.now()}-${file.name}`;
 
-    const { error: uploadError } = await supabaseServer
+    const { error: uploadError } = await getSupabaseServer()
       .storage.from('cars')
       .upload(filename, buffer, {
         contentType: file.type,
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     if (uploadError)
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
-    const { data } = await supabaseServer.storage.from('cars').getPublicUrl(filename);
+    const { data } = await getSupabaseServer().storage.from('cars').getPublicUrl(filename);
 
     return NextResponse.json({ url: data.publicUrl });
   } catch (e: any) {

@@ -1,9 +1,23 @@
+// app/api/cars/[id]/route.ts
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+type Ctx = { params: { id: string } };
+
+// --- helper: lazy server client (service role) ---
+function getSupabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error('Missing SUPABASE env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
+  }
+  return createClient(url, serviceKey, { auth: { persistSession: false } });
+}
+
+// camelCase -> snake_case (update/insert payload)
 function toDb(patch: any) {
   return {
     ...(patch.title !== undefined && { title: patch.title }),
@@ -29,13 +43,18 @@ function toDb(patch: any) {
     ...(patch.status !== undefined && { status: patch.status }),
     ...(patch.firstOwner !== undefined && { first_owner: !!patch.firstOwner }),
     ...(patch.main_image_path !== undefined && { main_image_path: patch.main_image_path }),
-    ...(patch.images !== undefined && { images: Array.isArray(patch.images) ? patch.images.map(String) : [] }),
+    ...(patch.images !== undefined && {
+      images: Array.isArray(patch.images) ? patch.images.map(String) : [],
+    }),
     ...(patch.video_url !== undefined && { video_url: patch.video_url }),
-    ...(patch.equipment !== undefined && { equipment: Array.isArray(patch.equipment) ? patch.equipment.map(String) : [] }),
+    ...(patch.equipment !== undefined && {
+      equipment: Array.isArray(patch.equipment) ? patch.equipment.map(String) : [],
+    }),
     updated_at: new Date().toISOString(),
   };
 }
 
+// snake_case -> camelCase (response to client)
 function fromDb(row: any) {
   if (!row) return row;
   return {
@@ -71,17 +90,24 @@ function fromDb(row: any) {
   };
 }
 
-type Ctx = { params: { id: string } };
-
 export async function GET(_req: Request, { params }: Ctx) {
-  const { data, error } = await supabaseServer
-    .from('cars').select('*').eq('id', params.id).single();
+  try {
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
+      .from('cars')
+      .select('*')
+      .eq('id', params.id)
+      .single();
 
-  if (error) {
-    console.error('GET /api/cars/[id] error:', error);
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    if (error) {
+      console.error('GET /api/cars/[id] error:', error);
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    return NextResponse.json(fromDb(data));
+  } catch (e: any) {
+    console.error('GET /api/cars/[id] fatal:', e);
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
   }
-  return NextResponse.json(fromDb(data));
 }
 
 export async function PUT(req: Request, { params }: Ctx) {
@@ -89,7 +115,8 @@ export async function PUT(req: Request, { params }: Ctx) {
     const patch = await req.json();
     const update = toDb(patch);
 
-    const { data, error } = await supabaseServer
+    const supabase = getSupabaseServer();
+    const { data, error } = await supabase
       .from('cars')
       .update(update)
       .eq('id', params.id)
@@ -108,10 +135,16 @@ export async function PUT(req: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-  const { error } = await supabaseServer.from('cars').delete().eq('id', params.id);
-  if (error) {
-    console.error('DELETE /api/cars/[id] error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const supabase = getSupabaseServer();
+    const { error } = await supabase.from('cars').delete().eq('id', params.id);
+    if (error) {
+      console.error('DELETE /api/cars/[id] error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return new Response(null, { status: 204 });
+  } catch (e: any) {
+    console.error('DELETE /api/cars/[id] fatal:', e);
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
   }
-  return new Response(null, { status: 204 });
 }
