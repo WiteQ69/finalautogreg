@@ -76,7 +76,7 @@ export default function AdminDashboard() {
             </div>
             
             <Button asChild size="lg" className="bg-zinc-900 hover:bg-zinc-800">
-              <Link href="/__admin-auto-greg/cars/new" className="flex items-center space-x-2">
+              <Link href="/admin/cars" className="flex items-center space-x-2">
                 <Plus className="h-5 w-5" />
                 <span>Dodaj auto</span>
               </Link>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
                 Przeglądaj, edytuj i usuwaj samochody z bazy danych
               </p>
               <Button asChild className="w-full">
-                <Link href="/__admin-auto-greg/cars">
+                <Link href="/auta">
                   <Car className="h-4 w-4 mr-2" />
                   Zobacz wszystkie auta
                 </Link>
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
                 Utwórz nową ofertę samochodu w systemie
               </p>
               <Button asChild className="w-full bg-zinc-900 hover:bg-zinc-800">
-                <Link href="/__admin-auto-greg/cars/new">
+                <Link href="/admin/cars">
                   <Plus className="h-4 w-4 mr-2" />
                   Dodaj auto
                 </Link>

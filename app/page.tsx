@@ -87,7 +87,7 @@ export default function HomePage() {
               🚘 10 powodów, dlaczego warto kupić auto właśnie u nas ?
             </h2>
             <p className="text-xl text-zinc-600 max-w-2xl mx-auto">
-              Oferujemy wyjątkowe doświadczenie zakupu samochodów premium
+              Oferujemy wyjątkowe doświadczenie zakupu samochodów
             </p>
           </motion.div>
 

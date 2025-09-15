@@ -16,7 +16,7 @@ export function Footer() {
               <span className="text-xl font-bold tracking-tight">AutoGreg</span>
             </div>
             <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
-              Profesjonalna platforma sprzedaży samochodów premium. 
+              Profesjonalna platforma sprzedaży samochodów. 
               Znajdź i kup swój wymarzony pojazd w eleganckim stylu.
             </p>
           </div>

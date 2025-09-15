@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import { supabaseServer } from '@/lib/supabase-server';
+
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,26 +9,28 @@ export async function POST(req: Request) {
   try {
     const form = await req.formData();
     const file = form.get('file') as File | null;
-    if (!file) return NextResponse.json({ error: 'file required' }, { status: 400 });
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    if (!file) {
+      return NextResponse.json({ error: 'No file found' }, { status: 400 });
+    }
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = `${Date.now()}-${file.name}`;
 
-    const orig = (file as any).name || 'upload.bin';
-    const ext = path.extname(orig) || '.bin';
-    const name = path.basename(orig, ext);
-    const fname = `${name}-${Date.now()}${ext}`;
-    const fpath = path.join(uploadsDir, fname);
+    const { error: uploadError } = await supabaseServer
+      .storage.from('cars')
+      .upload(filename, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    await fs.writeFile(fpath, buffer);
+    if (uploadError)
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
-    const url = `/uploads/${fname}`;
-    return NextResponse.json({ ok: true, url });
+    const { data } = await supabaseServer.storage.from('cars').getPublicUrl(filename);
+
+    return NextResponse.json({ url: data.publicUrl });
   } catch (e: any) {
-    console.error('Upload error:', e);
-    return NextResponse.json({ error: e?.message || 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
