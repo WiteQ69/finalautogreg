@@ -1,8 +1,8 @@
 // middleware.ts
 import { NextResponse, NextRequest } from 'next/server';
 
-const USER = process.env.ADMIN_USER!;
-const PASS = process.env.ADMIN_PASS!;
+const USER = process.env.NEXT_PUBLIC_ADMIN_USER!;
+const PASS = process.env.NEXT_PUBLIC_ADMIN_PASS!;
 
 function unauthorized() {
   return new NextResponse('Auth required.', {
@@ -21,7 +21,8 @@ export function middleware(req: NextRequest) {
 
   try {
     const base64 = auth.split(' ')[1] || '';
-    const [user, pass] = atob(base64).split(':');
+    const [user, ...rest] = atob(base64).split(':');
+    const pass = rest.join(':'); // hasło może zawierać dwukropek
 
     if (user === USER && pass === PASS) {
       return NextResponse.next();
