@@ -1,28 +1,38 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+// middleware.ts
+import { NextResponse, NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const adminPath = '__admin-auto-greg';
-  
-  // Check if accessing admin area
-  if (request.nextUrl.pathname.startsWith(`/${adminPath}`)) {
-    // Allow login page
-    if (request.nextUrl.pathname === `/${adminPath}/login`) {
+const USER = process.env.ADMIN_USER!;
+const PASS = process.env.ADMIN_PASS!;
+
+function unauthorized() {
+  return new NextResponse('Auth required.', {
+    status: 401,
+    headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
+  });
+}
+
+export function middleware(req: NextRequest) {
+  if (!req.nextUrl.pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+
+  const auth = req.headers.get('authorization') || '';
+  if (!auth.startsWith('Basic ')) return unauthorized();
+
+  try {
+    const base64 = auth.split(' ')[1] || '';
+    const [user, pass] = atob(base64).split(':');
+
+    if (user === USER && pass === PASS) {
       return NextResponse.next();
     }
-    
-    // Check for admin session
-    const sessionCookie = request.cookies.get('admin-session');
-    if (!sessionCookie || sessionCookie.value !== 'authenticated') {
-      return NextResponse.redirect(new URL(`/${adminPath}/login`, request.url));
-    }
+  } catch {
+    // zły nagłówek
   }
-  
-  return NextResponse.next();
+
+  return unauthorized();
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|uploads|cars.json).*)',
-  ],
+  matcher: ['/admin/:path*'],
 };
