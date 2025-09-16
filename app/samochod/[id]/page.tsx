@@ -53,8 +53,8 @@ const facts = [
       ? `${mileageNum.toLocaleString('pl-PL')} km`
       : undefined,
   },
-  { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo ? paliwo.toUpperCase() : undefined },
-  { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: car.transmission ? car.transmission.toUpperCase() : undefined },
+  { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
+  { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: car.transmission },
   {
     icon: <CarFront className="h-5 w-5" />,
     label: 'Nadwozie',
@@ -73,6 +73,18 @@ const facts = [
     value: Number.isFinite(powerKwNum) ? `${powerKwNum} kW` : undefined,
   },
 ].filter((f) => !!f.value);
+
+  // Normalizacja pól snake_case vs camelCase
+  const registeredInVal = (car as any).registeredIn ?? (car as any).registered_in ?? undefined;
+  const saleDocumentRaw = (car as any).saleDocument ?? (car as any).sale_document ?? undefined;
+  const saleDocumentText =
+    saleDocumentRaw === 'umowa'
+      ? 'Umowa kupna-sprzedaży'
+      : saleDocumentRaw === 'vat_marza'
+      ? 'Faktura VAT marża'
+      : saleDocumentRaw === 'vat23'
+      ? 'Faktura VAT 23%'
+      : saleDocumentRaw ?? undefined;
 
 
   const images: string[] =
@@ -106,6 +118,30 @@ const facts = [
                   </div>
                 )}
               </div>
+              <div className="rounded-2xl border p-5">
+                <h3 className="text-lg font-semibold mb-3">Najważniejsze</h3>
+                <dl className="space-y-2 text-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="text-zinc-600">Pochodzenie</dt>
+                    <dd className="text-zinc-900 font-medium">{car.origin ?? '—'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="text-zinc-600">Zarejestrowany</dt>
+                    <dd className="text-zinc-900 font-medium">{registeredInVal ?? '—'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="text-zinc-600">Pierwszy właściciel</dt>
+                    <dd className="text-zinc-900 font-medium">{car.firstOwner ? 'Tak' : 'Nie'}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="text-zinc-600">Dokument sprzedaży</dt>
+                    <dd className="text-zinc-900 font-medium">
+                      {saleDocumentText ?? '—'}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
             </div>
           </aside>
         </div>
