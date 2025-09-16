@@ -53,8 +53,8 @@ const facts = [
       ? `${mileageNum.toLocaleString('pl-PL')} km`
       : undefined,
   },
-  { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
-  { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: car.transmission },
+  { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo ? paliwo.toUpperCase() : undefined },
+  { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: car.transmission ? car.transmission.toUpperCase() : undefined },
   {
     icon: <CarFront className="h-5 w-5" />,
     label: 'Nadwozie',
