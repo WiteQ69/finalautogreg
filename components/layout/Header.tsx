@@ -12,6 +12,7 @@ import Image from "next/image";
 const navigation = [
   { name: 'STRONA GŁÓWNA', href: '/' },
   { name: 'AKTUALNA OFERTA', href: '/auta' },
+  { name: 'UBEZPIECZENIA', href: 'https://www.ubezpieczeniaosiek.pl/' },
   { name: 'KONTAKT', href: '/kontakt' },
 ];
 
