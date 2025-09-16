@@ -13,11 +13,10 @@ export function Footer() {
                 <Car className="h-6 w-6 text-zinc-900" />
               </div>
               
-              <span className="text-xl font-bold tracking-tight">AutoGreg</span>
+              <span className="text-xl font-bold tracking-tight"></span>
             </div>
             <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
-              Profesjonalna platforma sprzedaży samochodów. 
-              Znajdź i kup swój wymarzony pojazd w eleganckim stylu.
+              
             </p>
           </div>
 

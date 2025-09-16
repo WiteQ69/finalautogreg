@@ -1,10 +1,12 @@
 'use client';
 
 import './globals.css';
+import type { Metadata } from 'next'
 import { Inter } from 'next/font/google';
 import { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,7 +21,19 @@ export default function RootLayout({
         <AdminLayoutWrapper>
           {children}
         </AdminLayoutWrapper>
-      </body>
+      
+      {/* Google tag (gtag.js) */}
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=G-CS30CQPKFB`} strategy="afterInteractive" />
+      <Script id="ga-gtag" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-CS30CQPKFB');
+        `}
+      </Script>
+
+    </body>
     </html>
   );
 }
