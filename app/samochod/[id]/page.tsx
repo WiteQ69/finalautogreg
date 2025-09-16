@@ -129,10 +129,7 @@ const facts = [
                     <dt className="text-zinc-600">Zarejestrowany</dt>
                     <dd className="text-zinc-900 font-medium">{registeredInVal ?? '—'}</dd>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <dt className="text-zinc-600">Pierwszy właściciel</dt>
-                    <dd className="text-zinc-900 font-medium">{car.firstOwner ? 'Tak' : 'Nie'}</dd>
-                  </div>
+                  
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-zinc-600">Dokument sprzedaży</dt>
                     <dd className="text-zinc-900 font-medium">

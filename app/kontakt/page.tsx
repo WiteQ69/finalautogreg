@@ -39,15 +39,12 @@ export default function KontaktPage() {
     console.log('Dane z formularza kontaktowego:', data);
     setIsSubmitted(true);
     reset();
-
-    setTimeout(() => {
-      setIsSubmitted(false);
-    }, 3000);
+    setTimeout(() => setIsSubmitted(false), 3000);
   };
 
   return (
     <div className="min-h-screen bg-white pt-6">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -62,21 +59,23 @@ export default function KontaktPage() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Form */}
+        {/* 3 kolumny obok siebie (na lg) i równanie wysokości */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+          {/* Kolumna 1 — Formularz (wysokość referencyjna) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
+            className="h-full"
           >
-            <Card>
+            <Card className="h-full flex flex-col">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Mail className="h-5 w-5" />
                   <span>Formularz kontaktowy</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1">
                 {isSubmitted ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -149,12 +148,12 @@ export default function KontaktPage() {
             </Card>
           </motion.div>
 
-          {/* Contact Information */}
+          {/* Kolumna 2 — Informacje kontaktowe + Godziny pod spodem */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-8"
+            className="space-y-8 h-full"
           >
             <Card>
               <CardHeader>
@@ -191,7 +190,6 @@ export default function KontaktPage() {
                       ul. Wenecja 6<br />34-100 Wadowice
                     </p>
                   </div>
-                 
                 </div>
               </CardContent>
             </Card>
@@ -214,6 +212,34 @@ export default function KontaktPage() {
                     <span className="text-zinc-600">Niedziela</span>
                     <span className="font-medium text-zinc-900">06:00 - 22:00</span>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Kolumna 3 — Mapa; wysokość = wysokość formularza; poprawione klipowanie */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="h-full"
+          >
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle>Gdzie nas znajdziesz</CardTitle>
+              </CardHeader>
+
+              {/* WAŻNE: bez p-0; wrapper z rounded + overflow-hidden + shadow */}
+              <CardContent className="flex-1">
+                <div className="h-full rounded-2xl overflow-hidden shadow">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2571.210255634081!2d19.512565!3d49.87607800000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4716892f4ae7ecf3%3A0x5128e2d2ba764766!2sAUTO-GREG%20GRZEGORZ%20PACZY%C5%83SKI%20-%20import%20i%20sprzeda%C5%BC%20samochod%C3%B3w%20z%20zagranicy%20AUTOPACZY%C5%83SKI%20BABICA%20WADOWICE!5e0!3m2!1spl!2spl!4v1758052066487!5m2!1spl!2spl"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    allowFullScreen
+                    title="Mapa dojazdu"
+                    className="block w-full h-full border-0"
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -422,16 +422,13 @@ export default function EditCarClient({ id }: Props) {
                 </div>
               </div>
 
-              {/* CENA + PIERWSZY WŁAŚCICIEL */}
+              {/* CENA  */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <Label htmlFor="price_text">Cena / opis ceny</Label>
                   <Input id="price_text" placeholder="np. 189 000 PLN lub 'Cena do uzgodnienia'" {...register('price_text')} />
                 </div>
-                <div className="flex items-center gap-3 mt-6">
-                  <Checkbox id="firstOwner" checked={!!watch('firstOwner')} onCheckedChange={(checked) => setValue('firstOwner', checked as boolean)} />
-                  <Label htmlFor="firstOwner">Pierwszy właściciel</Label>
-                </div>
+                
               </div>
 
               {/* Aktualne zdjęcia */}

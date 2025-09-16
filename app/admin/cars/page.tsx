@@ -136,12 +136,7 @@ export default function AdminCarsListPage() {
                         <div className="flex items-center space-x-3">
                           <span className="text-lg font-bold text-zinc-900">{car.price_text || 'Brak ceny'}</span>
                           {getStatusBadge(car.status)}
-                          {car.firstOwner && (
-                            <div className="flex items-center space-x-1 text-xs text-green-600">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Pierwszy właściciel</span>
-                            </div>
-                          )}
+                          
                         </div>
                       </div>
                     </div>
