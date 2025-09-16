@@ -60,8 +60,7 @@ export default function AutaPage() {
             <div className="flex items-center space-x-3 mb-8">
               <div className="p-2 rounded-xl bg-green-100"><CheckCircle className="h-6 w-6 text-green-600" /></div>
               <h2 className="text-3xl font-bold text-zinc-900">Sprzedane auta</h2>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">{soldCars.length}</span>
-            </div>
+                          </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {soldCars.map((car, index) => (
                 <motion.div key={car.id} layout>
