@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Car, FilterCriteria } from '@/types/car';
 
+const normStatus = (v: unknown) => String(v ?? '').trim().toLowerCase();
+
 interface CarState {
   cars: Car[];
   favorites: string[];
@@ -32,7 +34,6 @@ export const useCarStore = create<CarState>()(
 
       addCar: (car) =>
         set((state) => ({
-          // nowy rekord na początek
           cars: [car, ...state.cars],
         })),
 
@@ -50,16 +51,28 @@ export const useCarStore = create<CarState>()(
           cars: state.cars.filter((car) => String(car.id) !== String(id)),
         })),
 
-      setCars: (cars) => set({ cars }),
+      setCars: (cars) => set(() => ({ cars: Array.isArray(cars) ? [...cars] : [] })),
 
       getActiveCars: () => {
         const { cars } = get();
-        return Array.isArray(cars) ? cars.filter((car) => car.status === 'active') : [];
+        return Array.isArray(cars)
+          ? cars.filter((car: any) => {
+              const s = normStatus(car?.status);
+              const badge = !!car?.sold_badge;
+              return s === 'active' || (!s && !badge);
+            })
+          : [];
       },
 
       getSoldCars: () => {
         const { cars } = get();
-        return Array.isArray(cars) ? cars.filter((car) => car.status === 'sold') : [];
+        return Array.isArray(cars)
+          ? cars.filter((car: any) => {
+              const s = normStatus(car?.status);
+              const badge = !!car?.sold_badge;
+              return s === 'sold' || (!s && badge);
+            })
+          : [];
       },
 
       getFilteredCars: (criteria) => {
@@ -68,39 +81,39 @@ export const useCarStore = create<CarState>()(
         if (!Array.isArray(cars)) return [];
 
         return cars.filter((car) => {
-          if (filters.status && car.status !== filters.status) return false;
+          if ((filters as any).status && (car as any).status !== (filters as any).status) return false;
 
-          if (filters.searchQuery) {
-            const query = filters.searchQuery.toLowerCase();
-            const searchableText = `${car.brand} ${car.model} ${car.title ?? ''} ${car.description ?? ''}`.toLowerCase();
+          if ((filters as any).searchQuery) {
+            const query = (filters as any).searchQuery.toLowerCase();
+            const searchableText = `${(car as any).brand} ${(car as any).model} ${(car as any).title ?? ''} ${(car as any).description ?? ''}`.toLowerCase();
             if (!searchableText.includes(query)) return false;
           }
 
-          if (filters.brand && car.brand !== filters.brand) return false;
-          if (filters.model && car.model !== filters.model) return false;
+          if ((filters as any).brand && (car as any).brand !== (filters as any).brand) return false;
+          if ((filters as any).model && (car as any).model !== (filters as any).model) return false;
 
-          if (filters.yearFrom && car.year < filters.yearFrom) return false;
-          if (filters.yearTo && car.year > filters.yearTo) return false;
+          if ((filters as any).yearFrom && (car as any).year < (filters as any).yearFrom) return false;
+          if ((filters as any).yearTo && (car as any).year > (filters as any).yearTo) return false;
 
-          if (typeof filters.priceFrom === 'number' && typeof car.price === 'number' && car.price < filters.priceFrom) return false;
-          if (typeof filters.priceTo === 'number' && typeof car.price === 'number' && car.price > filters.priceTo) return false;
+          if (typeof (filters as any).priceFrom === 'number' && typeof (car as any).price === 'number' && (car as any).price < (filters as any).priceFrom) return false;
+          if (typeof (filters as any).priceTo === 'number' && typeof (car as any).price === 'number' && (car as any).price > (filters as any).priceTo) return false;
 
-          if (filters.mileageFrom && car.mileage < filters.mileageFrom) return false;
-          if (filters.mileageTo && car.mileage > filters.mileageTo) return false;
+          if ((filters as any).mileageFrom && (car as any).mileage < (filters as any).mileageFrom) return false;
+          if ((filters as any).mileageTo && (car as any).mileage > (filters as any).mileageTo) return false;
 
-          if (filters.fuelType && car.fuelType !== filters.fuelType) return false;
-          if (filters.transmission && car.transmission !== filters.transmission) return false;
-          if (filters.bodyType && car.bodyType !== filters.bodyType) return false;
-          if (filters.drivetrain && car.drivetrain !== filters.drivetrain) return false;
+          if ((filters as any).fuelType && (car as any).fuelType !== (filters as any).fuelType) return false;
+          if ((filters as any).transmission && (car as any).transmission !== (filters as any).transmission) return false;
+          if ((filters as any).bodyType && (car as any).bodyType !== (filters as any).bodyType) return false;
+          if ((filters as any).drivetrain && (car as any).drivetrain !== (filters as any).drivetrain) return false;
 
-          if (filters.powerFrom != null && (typeof car.power !== 'number' || car.power < filters.powerFrom)) return false;
-          if (filters.powerTo != null && (typeof car.power !== 'number' || car.power > filters.powerTo)) return false;
+          if ((filters as any).powerFrom != null && (typeof (car as any).power !== 'number' || (car as any).power < (filters as any).powerFrom)) return false;
+          if ((filters as any).powerTo != null && (typeof (car as any).power !== 'number' || (car as any).power > (filters as any).powerTo)) return false;
 
-          if (filters.color && car.color !== filters.color) return false;
-          if (typeof filters.owners === 'number' && car.owners !== filters.owners) return false;
+          if ((filters as any).color && (car as any).color !== (filters as any).color) return false;
+          if (typeof (filters as any).owners === 'number' && (car as any).owners !== (filters as any).owners) return false;
 
-          if (filters.accidentFree !== undefined && car.accidentFree !== filters.accidentFree) return false;
-          if (filters.serviceHistory !== undefined && car.serviceHistory !== filters.serviceHistory) return false;
+          if ((filters as any).accidentFree !== undefined && (car as any).accidentFree !== (filters as any).accidentFree) return false;
+          if ((filters as any).serviceHistory !== undefined && (car as any).serviceHistory !== (filters as any).serviceHistory) return false;
 
           return true;
         });

@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+import SoldBadgeToggle from '@/components/admin/SoldBadgeToggle'; // ⬅️ DODANY IMPORT
+
 import { useCarStore } from '@/store/car-store';
 import {
   carFormSchema,
@@ -428,7 +430,20 @@ export default function EditCarClient({ id }: Props) {
                   <Label htmlFor="price_text">Cena / opis ceny</Label>
                   <Input id="price_text" placeholder="np. 189 000 PLN lub 'Cena do uzgodnienia'" {...register('price_text')} />
                 </div>
-                
+              </div>
+
+              {/* STEMPL „SPRZEDANY” – ręczny przełącznik */}
+              <div className="rounded-lg border p-4">
+                <h3 className="font-semibold text-zinc-900 mb-2">Nakładka „SPRZEDANY” na zdjęciu</h3>
+              
+                <SoldBadgeToggle
+                  carId={String(car.id)}
+                  initial={!!(car as any).sold_badge}
+                  onChanged={(val) => {
+                    // szybka aktualizacja stanu listy w pamięci
+                    try { updateCar(id, { ...car, sold_badge: val } as any); } catch {}
+                  }}
+                />
               </div>
 
               {/* Aktualne zdjęcia */}

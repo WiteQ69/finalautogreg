@@ -113,13 +113,13 @@ const facts = [
                   {car.engine ? ` • ${car.engine}` : ''}
                 </p>
                 {car.price_text && (
-                  <div className="text-3xl font-semibold mt-4">
+                  <div className="text-2xl font-semibold mt-4">
                     {car.price_text}
                   </div>
                 )}
               </div>
               <div className="rounded-2xl border p-5">
-                <h3 className="text-lg font-semibold mb-3">Najważniejsze</h3>
+               
                 <dl className="space-y-2 text-sm">
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-zinc-600">Pochodzenie</dt>
@@ -146,7 +146,7 @@ const facts = [
         {/* Najważniejsze */}
         {facts.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-xl font-semibold mb-4">Najważniejsze</h2>
+          
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {facts.map((f, i) => (
                 <div

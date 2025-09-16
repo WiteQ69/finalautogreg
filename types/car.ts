@@ -60,6 +60,7 @@ export type Car = {
   origin?: Origin;
   registeredIn?: RegisteredIn;
   saleDocument?: SaleDocument;
+   sold_badge?: boolean | null;
 
   // sprzedaż / status / cena
   price_text?: string;
