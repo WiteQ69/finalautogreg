@@ -252,6 +252,51 @@ export default function EditCarPage() {
                   />
                   {errors.mileage && <p className="text-sm text-red-500 mt-1">{errors.mileage.message}</p>}
                 </div>
+                <div>
+                  <Label htmlFor="vin">Numer VIN *</Label>
+                  <Input
+                    id="vin"
+                    maxLength={17}
+                    {...register('vin')}
+                    placeholder="17-znakowy numer VIN"
+                  />
+                  {errors.vin && <p className="text-sm text-red-500 mt-1">{errors.vin.message}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="power">Moc (KM) *</Label>
+                  <Input
+                    id="power"
+                    type="number"
+                    min="1"
+                    {...register('power', { valueAsNumber: true })}
+                  />
+                  {errors.power && <p className="text-sm text-red-500 mt-1">{errors.power.message}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="displacement">Pojemność (cm³) *</Label>
+                  <Input
+                    id="displacement"
+                    type="number"
+                    min="1"
+                    {...register('displacement', { valueAsNumber: true })}
+                  />
+                  {errors.displacement && <p className="text-sm text-red-500 mt-1">{errors.displacement.message}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="owners">Liczba właścicieli *</Label>
+                  <Input
+                    id="owners"
+                    type="number"
+                    min="1"
+                    max="10"
+                    {...register('owners', { valueAsNumber: true })}
+                  />
+                  {errors.owners && <p className="text-sm text-red-500 mt-1">{errors.owners.message}</p>}
+                </div>
+
 
                 <div>
                   <Label htmlFor="location">Lokalizacja *</Label>

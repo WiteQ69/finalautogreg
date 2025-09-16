@@ -12,6 +12,7 @@ import Image from "next/image";
 const navigation = [
   { name: 'STRONA GŁÓWNA', href: '/' },
   { name: 'AKTUALNA OFERTA', href: '/auta' },
+  { name: 'GWARANCJE', href: '/gwarancje' },
   { name: 'UBEZPIECZENIA', href: 'https://www.ubezpieczeniaosiek.pl/' },
   { name: 'KONTAKT', href: '/kontakt' },
 ];
@@ -31,7 +32,7 @@ export function Header() {
 <Link href="/" className="flex items-center" aria-label="AUTO GREG — paczynski.pl">
   <Image
     src="/autogreg-logo.png"       // plik w public/
-    alt="AUTO GREG — paczynski.pl"
+    alt="AUTO GREG GRZEGORZ PACZYŃSKI"
     width={270}                    // ustaw rozmiar jak chcesz
     height={46}                    // proporcja zbliżona do oryginału
     className="h-13 w-left"         // h-8 / h-10 zależnie od paska

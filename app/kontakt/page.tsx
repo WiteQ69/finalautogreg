@@ -191,6 +191,7 @@ export default function KontaktPage() {
                       ul. Wenecja 6<br />34-100 Wadowice
                     </p>
                   </div>
+                 
                 </div>
               </CardContent>
             </Card>
