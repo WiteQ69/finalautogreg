@@ -49,6 +49,7 @@ function toDb(patch: any) {
     updated_at: 'updated_at',
     sold_badge: 'sold_badge',
     soldBadge: 'sold_badge',
+description: 'description',
 
     // camelCase -> snake_case
     engineCapacityCcm: 'engine_capacity_ccm',

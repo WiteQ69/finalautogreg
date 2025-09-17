@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Save, ArrowLeft, Trash2, CheckCircle2, Undo2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-import SoldBadgeToggle from '@/components/admin/SoldBadgeToggle'; // ⬅️ DODANY IMPORT
+import SoldBadgeToggle from '@/components/admin/SoldBadgeToggle';
 
 import { useCarStore } from '@/store/car-store';
 import {
@@ -42,6 +43,30 @@ export default function EditCarClient({ id }: Props) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
+ // helpers (camel/snake + normalizacja + zawężanie unionów)
+const pick = (obj: any, camel: string, snake: string) =>
+  obj?.[camel] ?? obj?.[snake] ?? undefined;
+const n = (v: any) => (v === '' || v == null ? undefined : Number(v));
+const s = (v: any) => (v == null ? undefined : String(v));
+const b = (v: any) =>
+  typeof v === 'boolean' ? v : v == null ? undefined : Boolean(v);
+const fromList = <T extends readonly string[]>(list: T, v: any): T[number] | undefined => {
+  const val = s(v);
+  return val && (list as readonly string[]).includes(val) ? (val as T[number]) : undefined;
+};
+
+
+  const clean = (obj: Record<string, any>) => {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    if (typeof v === 'string' && v.trim() === '') continue;
+    out[k] = v;
+  }
+  return out;
+};
+
+  // ===== Wczytanie listy aut do store =====
   useEffect(() => {
     const load = async () => {
       try {
@@ -57,8 +82,10 @@ export default function EditCarClient({ id }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setCars]);
 
-  const car = cars.find((c) => String(c.id) === String(id));
+  // znajdź auto (as any, bo ma camel + snake z Supabase)
+  const car: any = cars.find((c) => String(c.id) === String(id));
 
+  // istniejące zdjęcia
   useEffect(() => {
     if (car) setExistingImages(Array.isArray(car.images) ? car.images : []);
   }, [car]);
@@ -82,33 +109,41 @@ export default function EditCarClient({ id }: Props) {
     setExistingImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  // ===== ZAŁADOWANIE WARTOŚCI DO FORMULARZA (camel lub snake) =====
   useEffect(() => {
-    if (car) {
-      reset({
-        title: car.title,
-        brand: car.brand,
-        model: car.model,
-        year: car.year,
-        mileage: car.mileage,
-        engine: car.engine,
-        engineCapacityCcm: car.engineCapacityCcm,
-        powerKw: car.powerKw,
-        fuelType: car.fuelType,
-        transmission: car.transmission,
-        drivetrain: car.drivetrain,
-        bodyType: car.bodyType,
-        color: car.color,
-        doors: car.doors,
-        seats: car.seats,
-        condition: car.condition,
-        origin: car.origin,
-        registeredIn: car.registeredIn,
-        saleDocument: car.saleDocument,
-        price_text: car.price_text,
-        firstOwner: car.firstOwner,
-        equipment: car.equipment ?? [],
-      });
-    }
+    if (!car) return;
+
+   reset({
+  title: s(car.title) ?? '',
+  brand: s(car.brand) ?? '',
+  model: s(car.model) ?? '',
+  year: n(pick(car, 'year', 'year')),
+  mileage: n(pick(car, 'mileage', 'mileage')),
+  engine: s(car.engine) ?? '',
+description: s(car.description),
+
+  engineCapacityCcm: n(pick(car, 'engineCapacityCcm', 'engine_capacity_ccm')),
+  powerKw:           n(pick(car, 'powerKw', 'power_kw')),
+
+  // ⬇⬇ KLUCZOWE – zawężanie do unionów:
+  fuelType:     fromList(FUEL_TYPES,     pick(car, 'fuelType', 'fuel_type')),
+  transmission: fromList(TRANSMISSIONS,  car.transmission),
+  drivetrain:   fromList(DRIVETRAINS,    car.drivetrain),
+  bodyType:     fromList(BODY_TYPES,     pick(car, 'bodyType', 'body_type')),
+  condition:    fromList(CONDITIONS,     car.condition),
+  origin:       fromList(ORIGINS,        car.origin),
+  registeredIn: fromList(REGISTERED_IN,  pick(car, 'registeredIn', 'registered_in')),
+  saleDocument: fromList(SALE_DOCS,      pick(car, 'saleDocument', 'sale_document')),
+
+  color:  s(car.color),
+  doors:  n(car.doors),
+  seats:  n(car.seats),
+
+  price_text: s(car.price_text),
+  firstOwner: b(pick(car, 'firstOwner', 'first_owner')),
+  equipment: Array.isArray(car.equipment) ? car.equipment : [],
+});
+
   }, [car, reset]);
 
   if (loading) {
@@ -129,8 +164,12 @@ export default function EditCarClient({ id }: Props) {
       <div className="min-h-screen bg-zinc-50 p-8">
         <div className="max-w-4xl mx-auto text-center py-16">
           <h1 className="text-2xl font-bold text-zinc-900 mb-2">Samochód nie znaleziony</h1>
-          <p className="text-zinc-600 mb-6">ID: <code>{id}</code></p>
-          <Button asChild><Link href="/admin/cars">Powrót do listy</Link></Button>
+          <p className="text-zinc-600 mb-6">
+            ID: <code>{id}</code>
+          </p>
+          <Button asChild>
+            <Link href="/admin/cars">Powrót do listy</Link>
+          </Button>
         </div>
       </div>
     );
@@ -140,7 +179,7 @@ export default function EditCarClient({ id }: Props) {
     const urls: string[] = [];
     for (const file of files) {
       const fd = new FormData();
-      fd.append('file', file); // klucz: 'file'
+      fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -149,6 +188,7 @@ export default function EditCarClient({ id }: Props) {
     return urls;
   }
 
+  // ===== ZAPIS =====
   const onSubmit = async (data: CarFormData) => {
     try {
       let newImages: string[] = [];
@@ -160,14 +200,16 @@ export default function EditCarClient({ id }: Props) {
         videoUrl = url;
       }
 
-      const payload: any = {
-        ...car,
+      // nie rozlewamy ...car; wysyłamy tylko czysty patch
+      const patch = clean({
         title: data.title,
         brand: data.brand,
         model: data.model,
         year: data.year,
         mileage: data.mileage,
         engine: data.engine,
+description: data.description,
+
         engineCapacityCcm: data.engineCapacityCcm,
         powerKw: data.powerKw,
         fuelType: data.fuelType,
@@ -181,19 +223,25 @@ export default function EditCarClient({ id }: Props) {
         origin: data.origin,
         registeredIn: data.registeredIn,
         saleDocument: data.saleDocument,
+
         price_text: data.price_text,
         firstOwner: data.firstOwner,
         equipment: data.equipment ?? [],
+
         images: [...existingImages, ...newImages],
         video_url: videoUrl,
-        main_image_path: (Array.isArray(car.images) && car.images[0]) || newImages[0] || car.main_image_path,
+        main_image_path:
+          (Array.isArray(car.images) && car.images[0]) ||
+          newImages[0] ||
+          car.main_image_path,
+
         updatedAt: new Date().toISOString(),
-      };
+      });
 
       const res = await fetch(`/api/cars/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(patch),
       });
       if (!res.ok) throw new Error('API PUT failed');
       const saved = await res.json();
@@ -205,7 +253,7 @@ export default function EditCarClient({ id }: Props) {
     }
   };
 
-  // akcje dodatkowe
+  // ===== Akcje dodatkowe =====
   const markAsSold = async () => {
     if (!confirm('Oznaczyć ten samochód jako SPRZEDANY?')) return;
     try {
@@ -288,7 +336,9 @@ export default function EditCarClient({ id }: Props) {
         </motion.div>
 
         <Card>
-          <CardHeader><CardTitle>Edytuj informacje</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Edytuj informacje</CardTitle>
+          </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               {/* PODSTAWOWE */}
@@ -343,28 +393,44 @@ export default function EditCarClient({ id }: Props) {
                     <Label>Typ paliwa</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('fuelType')}>
                       <option value="">— wybierz —</option>
-                      {FUEL_TYPES.map((v) => <option key={v} value={v}>{v.replace('_',' + ')}</option>)}
+                      {FUEL_TYPES.map((v) => (
+                        <option key={v} value={v}>
+                          {v.replace('_', ' + ')}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <Label>Skrzynia biegów</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('transmission')}>
                       <option value="">— wybierz —</option>
-                      {TRANSMISSIONS.map((v) => <option key={v} value={v}>{v}</option>)}
+                      {TRANSMISSIONS.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <Label>Napęd</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('drivetrain')}>
                       <option value="">— wybierz —</option>
-                      {DRIVETRAINS.map((v) => <option key={v} value={v}>{v}</option>)}
+                      {DRIVETRAINS.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <Label>Typ nadwozia</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('bodyType')}>
                       <option value="">— wybierz —</option>
-                      {BODY_TYPES.map((v) => <option key={v} value={v}>{v.toUpperCase()}</option>)}
+                      {BODY_TYPES.map((v) => (
+                        <option key={v} value={v}>
+                          {v.toUpperCase()}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -373,31 +439,43 @@ export default function EditCarClient({ id }: Props) {
                   </div>
                   <div>
                     <Label htmlFor="doors">Liczba drzwi</Label>
-                    <Input id="doors" type="number" min="2" max="6" placeholder="5" {...register('doors', { valueAsNumber: true })} />
+                    <Input id="doors" type="number" min={2} max={6} placeholder="5" {...register('doors', { valueAsNumber: true })} />
                   </div>
                   <div>
                     <Label htmlFor="seats">Liczba miejsc</Label>
-                    <Input id="seats" type="number" min="2" max="9" placeholder="5" {...register('seats', { valueAsNumber: true })} />
+                    <Input id="seats" type="number" min={2} max={9} placeholder="5" {...register('seats', { valueAsNumber: true })} />
                   </div>
                   <div>
                     <Label>Stan techniczny</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('condition')}>
                       <option value="">— wybierz —</option>
-                      {CONDITIONS.map((v) => <option key={v} value={v}>{v}</option>)}
+                      {CONDITIONS.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <Label>Kraj pochodzenia</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('origin')}>
                       <option value="">— wybierz —</option>
-                      {ORIGINS.map((v) => <option key={v} value={v}>{v}</option>)}
+                      {ORIGINS.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <Label>Zarejestrowany</Label>
                     <select className="w-full rounded-md border px-3 py-2" {...register('registeredIn')}>
                       <option value="">— wybierz —</option>
-                      {REGISTERED_IN.map((v) => <option key={v} value={v}>{v}</option>)}
+                      {REGISTERED_IN.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="md:col-span-3">
@@ -435,13 +513,13 @@ export default function EditCarClient({ id }: Props) {
               {/* STEMPL „SPRZEDANY” – ręczny przełącznik */}
               <div className="rounded-lg border p-4">
                 <h3 className="font-semibold text-zinc-900 mb-2">Nakładka „SPRZEDANY” na zdjęciu</h3>
-              
                 <SoldBadgeToggle
                   carId={String(car.id)}
-                  initial={!!(car as any).sold_badge}
+                  initial={!!car.sold_badge}
                   onChanged={(val) => {
-                    // szybka aktualizacja stanu listy w pamięci
-                    try { updateCar(id, { ...car, sold_badge: val } as any); } catch {}
+                    try {
+                      updateCar(id, { sold_badge: val } as any);
+                    } catch {}
                   }}
                 />
               </div>
@@ -451,7 +529,7 @@ export default function EditCarClient({ id }: Props) {
                 <div>
                   <Label>Aktualne zdjęcia</Label>
                   <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {car.images.map((src, i) => (
+                    {car.images.map((src: string, i: number) => (
                       <img key={i} src={src} alt={`img-${i}`} className="rounded-lg border object-cover w-full h-32" />
                     ))}
                   </div>
@@ -463,9 +541,7 @@ export default function EditCarClient({ id }: Props) {
                 <div>
                   <Label>Dodaj zdjęcia (opcjonalnie)</Label>
                   <Input type="file" accept="image/*" multiple onChange={(e) => setImageFiles(Array.from(e.target.files ?? []))} />
-                  {imageFiles.length > 0 && (
-                    <p className="text-sm text-zinc-500 mt-1">{imageFiles.length} plików wybrano</p>
-                  )}
+                  {imageFiles.length > 0 && <p className="text-sm text-zinc-500 mt-1">{imageFiles.length} plików wybrano</p>}
                 </div>
                 <div>
                   <Label>Wideo (opcjonalnie)</Label>
@@ -473,6 +549,20 @@ export default function EditCarClient({ id }: Props) {
                   {videoFile && <p className="text-sm text-zinc-500 mt-1">{videoFile.name}</p>}
                 </div>
               </div>
+{/* DODATKOWA INFORMACJA */}
+<div>
+  <h3 className="font-semibold text-zinc-900 mb-3">Krótka notatka</h3>
+  <Label htmlFor="description">Własny tekst (opcjonalnie)</Label>
+  <Textarea
+    id="description"
+    rows={4}
+    placeholder="Świeżo po wymianie oleju, mega okazja, itp."
+    {...register('description')}
+  />
+  <p className="text-xs text-zinc-500 mt-1">
+    Ten tekst pojawi się w opisie auta.
+  </p>
+</div>
 
               {/* WYPOSAŻENIE */}
               <div>

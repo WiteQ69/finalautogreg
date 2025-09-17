@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
 import EquipTile from './EquipTile';
 import { Gauge, Fuel, Workflow, CarFront, Cog, Bolt } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -113,7 +114,7 @@ const facts = [
                   {car.engine ? ` • ${car.engine}` : ''}
                 </p>
                 {car.price_text && (
-                  <div className="text-2xl font-semibold mt-4">
+                  <div className="text-1xl font-semibold mt-4">
                     {car.price_text}
                   </div>
                 )}
@@ -143,6 +144,7 @@ const facts = [
           </aside>
         </div>
 
+
         {/* Najważniejsze */}
         {facts.length > 0 && (
           <section className="mt-10">
@@ -171,7 +173,19 @@ const facts = [
             </div>
           </section>
         )}
-
+{car.description && (
+  <Card className="mt-6">
+    <CardHeader>
+      <CardTitle>Informacje dodatkowe</CardTitle>
+    </CardHeader>
+    <CardContent>
+      {/* zachowuje nowe linie z Textarea */}
+      <div className="prose prose-zinc max-w-none whitespace-pre-wrap">
+        {car.description}
+      </div>
+    </CardContent>
+  </Card>
+)}
         {/* Wyposażenie */}
         {Array.isArray(car.equipment) && car.equipment.length > 0 && (
           <section className="mt-10">

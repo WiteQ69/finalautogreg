@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Car, Star, Shield, Clock, Mail } from 'lucide-react';
 import { HeroSection } from '@/components/ui/hero-section';
+import GoogleReviewsCarousel from '@/components/home/GoogleReviewsCarousel';
+
 
 
 import {
@@ -75,6 +77,15 @@ export default function HomePage() {
       <HeroSection />
 
       {/* Features Section */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+  {/* KARUZELA OPINII Z GOOGLE */}
+  <div className="mb-10">
+    <GoogleReviewsCarousel />
+  </div>
+
+  {/* 10 powodów dlaczego warto ... */}
+  {/* ...Twoja sekcja */}
+</div>
       <section className="py-20 bg-zinc-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div

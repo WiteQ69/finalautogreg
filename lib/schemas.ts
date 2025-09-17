@@ -1,29 +1,20 @@
 // lib/schemas.ts
 import { z } from 'zod';
-import type {
-  FuelType,
-  Transmission,
-  Drivetrain,
-  BodyType,
-  Condition,
-  Origin,
-  RegisteredIn,
-  SaleDocument,
-} from '@/types/car';
 
-export const FUEL_TYPES: FuelType[] = [
+// ----- Słowniki jako const-tuples -----
+export const FUEL_TYPES = [
   'benzyna',
   'diesel',
   'benzyna_lpg',
   'hybryda',
   'elektryczny',
-];
+] as const;
 
-export const TRANSMISSIONS: Transmission[] = ['manualna', 'automatyczna'];
+export const TRANSMISSIONS = ['manualna', 'automatyczna'] as const;
 
-export const DRIVETRAINS: Drivetrain[] = ['przód', 'tył', '4x4'];
+export const DRIVETRAINS = ['przód', 'tył', '4x4'] as const;
 
-export const BODY_TYPES: BodyType[] = [
+export const BODY_TYPES = [
   'hatchback',
   'sedan',
   'kombi',
@@ -33,11 +24,11 @@ export const BODY_TYPES: BodyType[] = [
   'kabriolet',
   'van',
   'dostawczy',
-];
+] as const;
 
-export const CONDITIONS: Condition[] = ['bezwypadkowy', 'nieuszkodzony'];
+export const CONDITIONS = ['bezwypadkowy', 'nieuszkodzony'] as const;
 
-export const ORIGINS: Origin[] = [
+export const ORIGINS = [
   'EU',
   'Salon Polska',
   'Niemcy',
@@ -50,12 +41,14 @@ export const ORIGINS: Origin[] = [
   'Szwajcaria',
   'Francja',
   'Polska',
-];
+] as const;
 
-export const REGISTERED_IN: RegisteredIn[] = ['EU', 'PL'];
+// <-- Dodałeś "NIE" tutaj
+export const REGISTERED_IN = ['PL', 'EU', 'NIE'] as const;
 
-export const SALE_DOCS: SaleDocument[] = ['umowa', 'vat_marza', 'vat23'];
+export const SALE_DOCS = ['umowa', 'vat_marza', 'vat23'] as const;
 
+// ----- Lista wyposażenia -----
 export const EQUIPMENT_LIST = [
   { key: 'abs', label: 'ABS' },
   { key: 'esp', label: 'ESP' },
@@ -90,6 +83,7 @@ export const EQUIPMENT_LIST = [
   { key: 'camera360', label: 'Kamera 360°' },
 ];
 
+// ----- Schemat formularza -----
 export const carFormSchema = z.object({
   title: z.string().min(2, 'Podaj tytuł'),
   brand: z.string().min(1, 'Wybierz markę').optional(),
@@ -103,25 +97,24 @@ export const carFormSchema = z.object({
   powerKw: z.number().int().positive().optional(),
   power: z.number().int().positive().optional(),
   displacement: z.number().int().positive().optional(),
-  fuelType: z.enum(FUEL_TYPES as [FuelType, ...FuelType[]]).optional(),
-  transmission: z.enum(TRANSMISSIONS as [Transmission, ...Transmission[]]).optional(),
-  drivetrain: z.enum(DRIVETRAINS as [Drivetrain, ...Drivetrain[]]).optional(),
-  bodyType: z.enum(BODY_TYPES as [BodyType, ...BodyType[]]).optional(),
+
+  fuelType: z.enum(FUEL_TYPES).optional(),
+  transmission: z.enum(TRANSMISSIONS).optional(),
+  drivetrain: z.enum(DRIVETRAINS).optional(),
+  bodyType: z.enum(BODY_TYPES).optional(),
   color: z.string().optional(),
   doors: z.number().int().min(2).max(6).optional(),
   seats: z.number().int().min(2).max(9).optional(),
-  condition: z.enum(CONDITIONS as [Condition, ...Condition[]]).optional(),
-  origin: z.enum(ORIGINS as [Origin, ...Origin[]]).optional(),
-  registeredIn: z.enum(REGISTERED_IN as [RegisteredIn, ...RegisteredIn[]]).optional(),
-  saleDocument: z.enum(SALE_DOCS as [SaleDocument, ...SaleDocument[]]).optional(),
+  condition: z.enum(CONDITIONS).optional(),
+  origin: z.enum(ORIGINS).optional(),
+  registeredIn: z.enum(REGISTERED_IN).optional(),
+  saleDocument: z.enum(SALE_DOCS).optional(),
 
   price_text: z.string().optional(),
   firstOwner: z.boolean().optional(),
-  
-  // opis
+
   description: z.string().max(5000).optional(),
-  
-  // dodatkowe pola
+
   vin: z.string().optional(),
   location: z.string().optional(),
   owners: z.number().int().min(1).optional(),

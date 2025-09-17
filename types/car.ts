@@ -49,6 +49,8 @@ export type Car = {
   // nowe parametry techniczne
   engineCapacityCcm?: number; // ccm
   powerKw?: number; // kW
+    description?: string | null;
+
   fuelType?: FuelType;
   transmission?: Transmission;
   drivetrain?: Drivetrain;
@@ -61,6 +63,7 @@ export type Car = {
   registeredIn?: RegisteredIn;
   saleDocument?: SaleDocument;
    sold_badge?: boolean | null;
+   
 
   // sprzedaż / status / cena
   price_text?: string;
@@ -85,7 +88,7 @@ export type Car = {
   video_url?: string;
 
   // opis i daty
-  description?: string;
+ 
   createdAt?: string;
   updatedAt?: string;
 
