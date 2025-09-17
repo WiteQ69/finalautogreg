@@ -13,7 +13,7 @@ export function HeroSection() {
       <div className="absolute inset-0">
         <Image
           src="/tlo.jpg"
-          alt="Premium car"
+          alt="AKTUALNE OFERTY"
           fill
           className="object-cover"
           priority

@@ -9,11 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Supabase client
+// Supabase client (server)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+// Stała ścieżka do reklamy z katalogu /public
+const AD_SRC = '/REKLAMA.JPG';
 
 export default async function CarPage({ params }: { params: { id: string } }) {
   const { data: car, error } = await supabase
@@ -24,60 +27,66 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   if (error || !car) notFound();
 
-  // --- NORMALIZACJA (camel + snake) ---
-const mileageNum =
-  typeof car.mileage === 'number' ? car.mileage : Number(car.mileage ?? NaN);
-const engineCcmNum =
-  typeof car.engineCapacityCcm === 'number'
-    ? car.engineCapacityCcm
-    : typeof car.engine_capacity_ccm === 'number'
-    ? car.engine_capacity_ccm
-    : Number(car.engine_capacity_ccm ?? NaN);
-const powerKwNum =
-  typeof car.powerKw === 'number'
-    ? car.powerKw
-    : typeof car.power_kw === 'number'
-    ? car.power_kw
-    : Number(car.power_kw ?? NaN);
+  // --- liczby / normalizacja ---
+  const mileageNum =
+    typeof car.mileage === 'number' ? car.mileage : Number(car.mileage ?? NaN);
 
-// ⬅️ kluczowa zmiana: dołóż fuel_type i body_type
-const paliwo = car.fuelType ?? car.fuel_type ?? car.fueltype;
-const nadwozieRaw = (car.bodyType ?? car.body_type ?? car.bodytype) as
-  | string
-  | undefined;
+  const engineCcmNum =
+    typeof (car as any).engineCapacityCcm === 'number'
+      ? (car as any).engineCapacityCcm
+      : typeof (car as any).engine_capacity_ccm === 'number'
+      ? (car as any).engine_capacity_ccm
+      : Number((car as any).engine_capacity_ccm ?? NaN);
 
-const facts = [
-  {
-    icon: <Gauge className="h-5 w-5" />,
-    label: 'Przebieg',
-    value: Number.isFinite(mileageNum)
-      ? `${mileageNum.toLocaleString('pl-PL')} km`
-      : undefined,
-  },
-  { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
-  { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: car.transmission },
-  {
-    icon: <CarFront className="h-5 w-5" />,
-    label: 'Nadwozie',
-    value: nadwozieRaw ? nadwozieRaw.toUpperCase() : undefined,
-  },
-  {
-    icon: <Cog className="h-5 w-5" />,
-    label: 'Pojemność',
-    value: Number.isFinite(engineCcmNum)
-      ? `${engineCcmNum.toLocaleString('pl-PL')} ccm`
-      : undefined,
-  },
-  {
-    icon: <Bolt className="h-5 w-5" />,
-    label: 'Moc',
-    value: Number.isFinite(powerKwNum) ? `${powerKwNum} kW` : undefined,
-  },
-].filter((f) => !!f.value);
+  const powerKwNum =
+    typeof (car as any).powerKw === 'number'
+      ? (car as any).powerKw
+      : typeof (car as any).power_kw === 'number'
+      ? (car as any).power_kw
+      : Number((car as any).power_kw ?? NaN);
 
-  // Normalizacja pól snake_case vs camelCase
-  const registeredInVal = (car as any).registeredIn ?? (car as any).registered_in ?? undefined;
-  const saleDocumentRaw = (car as any).saleDocument ?? (car as any).sale_document ?? undefined;
+  const paliwo: string | undefined =
+    (car as any).fuelType ?? (car as any).fuel_type ?? (car as any).fueltype;
+
+  const nadwozieRaw: string | undefined =
+    (car as any).bodyType ?? (car as any).body_type ?? (car as any).bodytype;
+
+  const facts = [
+    {
+      icon: <Gauge className="h-5 w-5" />,
+      label: 'Przebieg',
+      value: Number.isFinite(mileageNum)
+        ? `${mileageNum.toLocaleString('pl-PL')} km`
+        : undefined,
+    },
+    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
+    { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: (car as any).transmission },
+    {
+      icon: <CarFront className="h-5 w-5" />,
+      label: 'Nadwozie',
+      value: nadwozieRaw ? nadwozieRaw.toUpperCase() : undefined,
+    },
+    {
+      icon: <Cog className="h-5 w-5" />,
+      label: 'Pojemność',
+      value: Number.isFinite(engineCcmNum)
+        ? `${engineCcmNum.toLocaleString('pl-PL')} ccm`
+        : undefined,
+    },
+    {
+      icon: <Bolt className="h-5 w-5" />,
+      label: 'Moc',
+      value: Number.isFinite(powerKwNum) ? `${powerKwNum} kW` : undefined,
+    },
+  ].filter((f) => !!f.value);
+
+  // snake_case vs camelCase
+  const registeredInVal =
+    (car as any).registeredIn ?? (car as any).registered_in ?? undefined;
+
+  const saleDocumentRaw =
+    (car as any).saleDocument ?? (car as any).sale_document ?? undefined;
+
   const saleDocumentText =
     saleDocumentRaw === 'umowa'
       ? 'Umowa kupna-sprzedaży'
@@ -87,15 +96,15 @@ const facts = [
       ? 'Faktura VAT 23%'
       : saleDocumentRaw ?? undefined;
 
-
   const images: string[] =
-    Array.isArray(car.images) && car.images.length > 0
-      ? car.images
-      : car.main_image_path
-      ? [car.main_image_path]
+    Array.isArray((car as any).images) && (car as any).images.length > 0
+      ? (car as any).images
+      : (car as any).main_image_path
+      ? [(car as any).main_image_path]
       : [];
 
-  const videoUrl: string | undefined = car.video_url || undefined;
+  const videoUrl: string | undefined = (car as any).video_url || undefined;
+  const description: string | undefined = (car as any).description ?? undefined;
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -107,30 +116,31 @@ const facts = [
 
           <aside className="lg:col-span-4">
             <div className="lg:sticky lg:top-8 space-y-4">
+              {/* Tytuł / cena */}
               <div className="rounded-2xl border p-5">
-                <h1 className="text-2xl font-bold text-zinc-900">{car.title}</h1>
+                <h1 className="text-2xl font-bold text-zinc-900">{(car as any).title}</h1>
                 <p className="text-zinc-600 mt-1">
-                  {car.year}
-                  {car.engine ? ` • ${car.engine}` : ''}
+                  {(car as any).year}
+                  {(car as any).engine ? ` • ${(car as any).engine}` : ''}
                 </p>
-                {car.price_text && (
+                {(car as any).price_text && (
                   <div className="text-1xl font-semibold mt-4">
-                    {car.price_text}
+                    {(car as any).price_text}
                   </div>
                 )}
               </div>
+
+              {/* Pochodzenie / rejestracja / dokument */}
               <div className="rounded-2xl border p-5">
-               
                 <dl className="space-y-2 text-sm">
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-zinc-600">Pochodzenie</dt>
-                    <dd className="text-zinc-900 font-medium">{car.origin ?? '—'}</dd>
+                    <dd className="text-zinc-900 font-medium">{(car as any).origin ?? '—'}</dd>
                   </div>
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-zinc-600">Zarejestrowany</dt>
                     <dd className="text-zinc-900 font-medium">{registeredInVal ?? '—'}</dd>
                   </div>
-                  
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-zinc-600">Dokument sprzedaży</dt>
                     <dd className="text-zinc-900 font-medium">
@@ -140,15 +150,20 @@ const facts = [
                 </dl>
               </div>
 
+              {/* --- REKLAMA: stały obraz z /public jako tło --- */}
+              <div className="rounded-2xl border overflow-hidden h-64 sm:h-72 lg:h-80">
+                <div
+                  className="w-full h-full bg-center bg-cover"
+                  style={{ backgroundImage: `url('${AD_SRC}')` }}
+                />
+              </div>
             </div>
           </aside>
         </div>
 
-
         {/* Najważniejsze */}
         {facts.length > 0 && (
           <section className="mt-10">
-          
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {facts.map((f, i) => (
                 <div
@@ -174,12 +189,26 @@ const facts = [
           </section>
         )}
 
+        {/* Informacje dodatkowe */}
+        {description && (
+          <Card className="mt-10">
+            <CardHeader>
+              <CardTitle>Informacje dodatkowe</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-zinc max-w-none whitespace-pre-wrap">
+                {description}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Wyposażenie */}
-        {Array.isArray(car.equipment) && car.equipment.length > 0 && (
+        {Array.isArray((car as any).equipment) && (car as any).equipment.length > 0 && (
           <section className="mt-10">
             <h2 className="text-xl font-semibold mb-4">Wyposażenie</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {car.equipment.map((code: string) => (
+              {(car as any).equipment.map((code: string) => (
                 <div
                   key={code}
                   className="flex flex-col items-center justify-center p-4 border border-zinc-200 rounded-xl bg-white text-sm text-zinc-700 hover:shadow-md transition-shadow"
@@ -193,17 +222,4 @@ const facts = [
       </div>
     </div>
   );
-{car.description && (
-  <Card className="mt-6">
-    <CardHeader>
-      <CardTitle>Informacje dodatkowe</CardTitle>
-    </CardHeader>
-    <CardContent>
-      {/* zachowuje nowe linie z Textarea */}
-      <div className="prose prose-zinc max-w-none whitespace-pre-wrap">
-        {car.description}
-      </div>
-    </CardContent>
-  </Card>
-)}
 }

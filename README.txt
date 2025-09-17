@@ -1,34 +1,15 @@
+PATCH: statyczna reklama na karcie auta
 
-# Sold Badge — HOTFIX
+Zawartość:
+- app/samochod/[id]/page.tsx  (sekcja reklamy jako tło z /REKLAMA.JPG)
+- public/REKLAMA.JPG          (placeholder – podmień na własną grafikę)
+- README.txt
 
-To minimum, żeby overlay działał od razu.
-Wgrywasz i podmieniasz *tylko* te pliki.
+Instrukcja:
+1) Rozpakuj ZIP w katalogu głównym projektu (tam gdzie jest package.json).
+2) Zgódź się na nadpisanie app/samochod/[id]/page.tsx.
+3) Zostanie utworzony folder public/ z plikiem REKLAMA.JPG.
+   Podmień ten plik na swój (zachowaj nazwę lub zmień ścieżkę w page.tsx).
+4) Uruchom projekt: npm run dev
 
-## Co jest w ZIPie
-- components/SoldOverlay.tsx
-- components/CarImage.tsx
-- components/admin/SoldBadgeToggle.tsx   (PUT /api/cars/:id)
-- components/ui/simple-car-card.tsx      (używa CarImage i (car as any).sold_badge)
-- public/stamps/sold.png                  (placeholder — możesz podmienić)
-
-## Wymagania
-1) W bazie musi istnieć kolumna:
-```sql
-alter table public.cars
-add column if not exists sold_badge boolean not null default false;
-```
-2) Endpoint `/api/cars` powinien zwracać pole `sold_badge` w JSON (większość select * je zwróci).
-
-## Integracja
-1) Skopiuj pliki z ZIP nadpisując istniejące.
-2) W /admin na stronie edycji masz już import:
-```tsx
-import SoldBadgeToggle from '@/components/admin/SoldBadgeToggle';
-```
-– komponent wysyła `PUT /api/cars/:id` z `{ sold_badge: true|false }`.
-3) Lista `/auta` pobiera `/api/cars` i `SimpleCarCard` nakłada stempel, gdy `sold_badge = true`.
-4) Jeśli chcesz zmniejszyć stempel — edytuj rozmiar w `components/SoldOverlay.tsx` (klasy `w-1/2 max-w-[360px]`).
-
-## Debug
-- Nie nakłada się? Sprawdź w Network → `/api/cars` czy JSON ma `"sold_badge": true` dla danego auta.
-- Jeśli obraz ma 0 wysokości, upewnij się, że rodzic ma `aspect-video`, a `CarImage` ma `containerClassName="h-full"` (tak jest w pliku z ZIPa).
+Uwaga: jeżeli używasz basePath w next.config.js, rozważ zmianę ścieżki z '/REKLAMA.JPG' na 'REKLAMA.JPG'.

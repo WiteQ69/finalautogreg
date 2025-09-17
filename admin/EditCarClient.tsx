@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Save, ArrowLeft, Trash2, CheckCircle2, Undo2 } from 'lucide-react';
-
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -113,6 +113,7 @@ export default function EditCarClient({ id }: Props) {
         price_text: car.price_text,
         firstOwner: car.firstOwner,
         equipment: car.equipment ?? [],
+        description: (car as any).description ?? '',
       });
     }
   }, [car, reset]);
@@ -195,6 +196,8 @@ export default function EditCarClient({ id }: Props) {
         main_image_path: (Array.isArray(car.images) && car.images[0]) || newImages[0] || (car as any).main_image_path,
         updatedAt: new Date().toISOString(),
         sold_badge: !!soldBadge, // ⬅️ ZAPISUJEMY PRZEŁĄCZNIK
+          description: (data.description ?? '').trim(),
+
       };
 
       const res = await fetch(`/api/cars/${id}`, {

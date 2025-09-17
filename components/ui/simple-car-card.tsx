@@ -19,7 +19,7 @@ export function SimpleCarCard({ car, index }: { car: Car; index: number }) {
               imageClassName="object-cover group-hover:scale-[1.01] transition"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-zinc-400">
+            <div className="w-full h-full object-cover transition [image-rendering:auto]">
               Brak zdjęcia
             </div>
           )}

@@ -81,7 +81,14 @@ export default function AdminCarsListPage() {
               </Link>
             </Button>
           </div>
-
+<div className="flex items-center gap-2">
+  <Button asChild variant="outline">
+    <Link href="/admin/ad">Reklama</Link>
+  </Button>
+  <Button asChild>
+    <Link href="/admin/cars/new">Nowe auto</Link>
+  </Button>
+</div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">
@@ -116,7 +123,7 @@ export default function AdminCarsListPage() {
                           <img
                             src={car.main_image_path}
                             alt={car.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition [image-rendering:auto]"
                           />
                         ) : (
                           <CarIcon className="h-8 w-8 text-zinc-400" />
