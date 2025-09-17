@@ -34,7 +34,7 @@ export type Origin =
   | 'Polska'
   | 'Francja';
 
-export type RegisteredIn = 'EU' | 'PL';
+export type RegisteredIn = 'PL' | 'EU' | 'NIE';
 export type SaleDocument = 'umowa' | 'vat_marza' | 'vat23';
 
 export type Car = {
