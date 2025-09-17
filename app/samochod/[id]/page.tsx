@@ -173,19 +173,7 @@ const facts = [
             </div>
           </section>
         )}
-{car.description && (
-  <Card className="mt-6">
-    <CardHeader>
-      <CardTitle>Informacje dodatkowe</CardTitle>
-    </CardHeader>
-    <CardContent>
-      {/* zachowuje nowe linie z Textarea */}
-      <div className="prose prose-zinc max-w-none whitespace-pre-wrap">
-        {car.description}
-      </div>
-    </CardContent>
-  </Card>
-)}
+
         {/* Wyposażenie */}
         {Array.isArray(car.equipment) && car.equipment.length > 0 && (
           <section className="mt-10">
@@ -205,4 +193,17 @@ const facts = [
       </div>
     </div>
   );
+{car.description && (
+  <Card className="mt-6">
+    <CardHeader>
+      <CardTitle>Informacje dodatkowe</CardTitle>
+    </CardHeader>
+    <CardContent>
+      {/* zachowuje nowe linie z Textarea */}
+      <div className="prose prose-zinc max-w-none whitespace-pre-wrap">
+        {car.description}
+      </div>
+    </CardContent>
+  </Card>
+)}
 }
