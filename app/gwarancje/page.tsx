@@ -15,11 +15,11 @@ export default function GwarancjaPage() {
           className="mb-12 text-center"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-zinc-900 mb-4 tracking-tight">
-            12 miesięcy gwarancji
+            Gwarancja spokoju
           </h1>
           <p className="text-xl text-zinc-600 max-w-2xl mx-auto">
-            Każdy samochód kupiony u nas objęty jest roczną gwarancją, abyś mógł cieszyć się spokojem
-            i pełnym bezpieczeństwem.
+            Masz możliwość wykupienia dodatkowej gwarancji, która zapewnia ochronę Twojego auta
+            i daje Ci pewność, że w razie problemów nie zostaniesz sam.
           </p>
         </motion.div>
 
@@ -34,8 +34,8 @@ export default function GwarancjaPage() {
             </CardHeader>
             <CardContent>
               <p className="text-zinc-600">
-                Otrzymujesz 12 miesięcy gwarancji od dnia zakupu samochodu. To pewność, że nawet po
-                wyjeździe z placu nie zostajesz sam.
+                Wykupiona gwarancja obejmuje szeroki zakres usterek, dzięki czemu możesz czuć się
+                pewnie i bezpiecznie każdego dnia.
               </p>
             </CardContent>
           </Card>
@@ -49,8 +49,8 @@ export default function GwarancjaPage() {
             </CardHeader>
             <CardContent>
               <p className="text-zinc-600">
-                Jeżeli w tym czasie coś się zepsuje – wszystkie naprawy objęte gwarancją wykonujemy
-                całkowicie bezpłatnie.
+                Jeśli w okresie obowiązywania gwarancji dojdzie do awarii – wszystkie naprawy w jej
+                ramach wykonamy bez żadnych dodatkowych kosztów.
               </p>
             </CardContent>
           </Card>
@@ -64,13 +64,11 @@ export default function GwarancjaPage() {
             </CardHeader>
             <CardContent>
               <p className="text-zinc-600">
-                Wiemy, że auto to codzienna potrzeba. Dlatego naprawy staramy się realizować w
-                możliwie najkrótszym czasie.
+                Rozumiemy, jak ważne jest sprawne auto. Dlatego każdą naprawę realizujemy w możliwie
+                najkrótszym czasie, abyś mógł szybko wrócić na drogę.
               </p>
             </CardContent>
           </Card>
-
-          
         </div>
 
         {/* Podsumowanie */}
@@ -81,11 +79,11 @@ export default function GwarancjaPage() {
           className="mt-16 text-center"
         >
           <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 mb-4">
-            Bezpieczeństwo i zaufanie ponad wszystko
+            Zadbaj o swoje auto z wyprzedzeniem
           </h2>
           <p className="text-lg text-zinc-600 max-w-3xl mx-auto">
-            Nasza gwarancja to nie tylko dokument. To obietnica, że dbamy o Twój spokój i
-            komfort. Wybierając nas, wybierasz pewność i profesjonalizm.
+            Dodatkowa gwarancja to inwestycja w spokój i bezpieczeństwo. To pewność, że niezależnie
+            od sytuacji możesz liczyć na nasz profesjonalizm i wsparcie.
           </p>
         </motion.div>
       </div>
