@@ -35,12 +35,38 @@ export default function KontaktPage() {
     resolver: zodResolver(contactFormSchema),
   });
 
-  const onSubmit = (data: ContactFormData) => {
-    console.log('Dane z formularza kontaktowego:', data);
-    setIsSubmitted(true);
-    reset();
-    setTimeout(() => setIsSubmitted(false), 3000);
-  };
+const onSubmit = async (data: ContactFormData) => {
+  try {
+    // przygotuj payload w formacie wymaganym przez Web3Forms
+    const fd = new FormData();
+    fd.append('access_key', '9ba5e0d7-4171-47bf-ae8e-b25e32214f30'); // Twój klucz
+    fd.append('subject', `Nowa wiadomość z formularza: ${data.name}`);
+    fd.append('from_name', 'Formularz kontaktowy (strona)');
+    fd.append('name', data.name);
+    fd.append('phone', data.phone);
+    fd.append('message', data.message);
+    // honeypot (opcjonalnie zostaw puste):
+    fd.append('botcheck', '');
+
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      body: fd,
+    });
+
+    const json = await res.json();
+
+    if (json.success) {
+      setIsSubmitted(true);
+      reset();
+      setTimeout(() => setIsSubmitted(false), 3000);
+    } else {
+      alert('Błąd przy wysyłce: ' + (json.message || 'Spróbuj ponownie'));
+    }
+  } catch (e: any) {
+    alert('Nie udało się wysłać wiadomości: ' + (e?.message || 'Spróbuj ponownie'));
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-white pt-6">

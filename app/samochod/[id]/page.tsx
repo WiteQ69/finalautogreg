@@ -27,15 +27,15 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   if (error || !car) notFound();
 
-  // --- liczby / normalizacja ---
+  // Liczby
   const mileageNum =
-    typeof car.mileage === 'number' ? car.mileage : Number(car.mileage ?? NaN);
+    typeof (car as any).mileage === 'number'
+      ? (car as any).mileage
+      : Number((car as any).mileage ?? NaN);
 
-  const engineCcmNum =
+  const engineCapacityCcm =
     typeof (car as any).engineCapacityCcm === 'number'
       ? (car as any).engineCapacityCcm
-      : typeof (car as any).engine_capacity_ccm === 'number'
-      ? (car as any).engine_capacity_ccm
       : Number((car as any).engine_capacity_ccm ?? NaN);
 
   const powerKwNum =
@@ -45,46 +45,14 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       ? (car as any).power_kw
       : Number((car as any).power_kw ?? NaN);
 
+  // Tekstowe
   const paliwo: string | undefined =
     (car as any).fuelType ?? (car as any).fuel_type ?? (car as any).fueltype;
 
   const nadwozieRaw: string | undefined =
     (car as any).bodyType ?? (car as any).body_type ?? (car as any).bodytype;
 
-  const facts = [
-    {
-      icon: <Gauge className="h-5 w-5" />,
-      label: 'Przebieg',
-      value: Number.isFinite(mileageNum)
-        ? `${mileageNum.toLocaleString('pl-PL')} km`
-        : undefined,
-    },
-    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
-    { icon: <Workflow className="h-5 w-5" />, label: 'Skrzynia', value: (car as any).transmission },
-    {
-      icon: <CarFront className="h-5 w-5" />,
-      label: 'Nadwozie',
-      value: nadwozieRaw ? nadwozieRaw.toUpperCase() : undefined,
-    },
-    {
-      icon: <Cog className="h-5 w-5" />,
-      label: 'Pojemność',
-      value: Number.isFinite(engineCcmNum)
-        ? `${engineCcmNum.toLocaleString('pl-PL')} ccm`
-        : undefined,
-    },
-    {
-      icon: <Bolt className="h-5 w-5" />,
-      label: 'Moc',
-      value: Number.isFinite(powerKwNum) ? `${powerKwNum} kW` : undefined,
-    },
-  ].filter((f) => !!f.value);
-
-  // snake_case vs camelCase
-  const registeredInVal =
-    (car as any).registeredIn ?? (car as any).registered_in ?? undefined;
-
-  const saleDocumentRaw =
+  const saleDocumentRaw: string | undefined =
     (car as any).saleDocument ?? (car as any).sale_document ?? undefined;
 
   const saleDocumentText =
@@ -96,6 +64,7 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       ? 'Faktura VAT 23%'
       : saleDocumentRaw ?? undefined;
 
+  // Obrazy / wideo / opis / wyposażenie
   const images: string[] =
     Array.isArray((car as any).images) && (car as any).images.length > 0
       ? (car as any).images
@@ -105,20 +74,61 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   const videoUrl: string | undefined = (car as any).video_url || undefined;
   const description: string | undefined = (car as any).description ?? undefined;
+  const equipment: string[] = Array.isArray((car as any).equipment)
+    ? (car as any).equipment
+    : [];
+
+  // Fakty do „po prawej”
+  const facts = [
+    {
+      icon: <Gauge className="h-5 w-5" />,
+      label: 'Przebieg',
+      value: Number.isFinite(mileageNum)
+        ? `${mileageNum.toLocaleString('pl-PL')} km`
+        : undefined,
+    },
+    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
+    {
+      icon: <CarFront className="h-5 w-5" />,
+      label: 'Nadwozie',
+      value: nadwozieRaw,
+    },
+    {
+      icon: <Cog className="h-5 w-5" />,
+      label: 'Poj. silnika',
+      value: Number.isFinite(engineCapacityCcm)
+        ? `${engineCapacityCcm} cm³`
+        : undefined,
+    },
+    {
+      icon: <Bolt className="h-5 w-5" />,
+      label: 'Moc',
+      value: Number.isFinite(powerKwNum) ? `${powerKwNum} kW` : undefined,
+    },
+    {
+      icon: <Workflow className="h-5 w-5" />,
+      label: 'Dokument sprzedaży',
+      value: saleDocumentText,
+    },
+  ].filter((f) => !!f.value);
 
   return (
     <div className="min-h-screen bg-white pt-6">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Galeria */}
           <div className="lg:col-span-8">
             <Gallery images={images} videoUrl={videoUrl} />
           </div>
 
+          {/* Prawa kolumna */}
           <aside className="lg:col-span-4">
             <div className="lg:sticky lg:top-8 space-y-4">
               {/* Tytuł / cena */}
               <div className="rounded-2xl border p-5">
-                <h1 className="text-2xl font-bold text-zinc-900">{(car as any).title}</h1>
+                <h1 className="text-2xl font-bold text-zinc-900">
+                  {(car as any).title}
+                </h1>
                 <p className="text-zinc-600 mt-1">
                   {(car as any).year}
                   {(car as any).engine ? ` • ${(car as any).engine}` : ''}
@@ -130,28 +140,28 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                 )}
               </div>
 
-              {/* Pochodzenie / rejestracja / dokument */}
-              <div className="rounded-2xl border p-5">
-                <dl className="space-y-2 text-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <dt className="text-zinc-600">Pochodzenie</dt>
-                    <dd className="text-zinc-900 font-medium">{(car as any).origin ?? '—'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <dt className="text-zinc-600">Zarejestrowany</dt>
-                    <dd className="text-zinc-900 font-medium">{registeredInVal ?? '—'}</dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <dt className="text-zinc-600">Dokument sprzedaży</dt>
-                    <dd className="text-zinc-900 font-medium">
-                      {saleDocumentText ?? '—'}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+              {/* Pochodzenie / rejestracja / dokument – fakty */}
+              {facts.length > 0 && (
+                <div className="rounded-2xl border p-5">
+                  <dl className="space-y-2 text-sm">
+                    {facts.map((f) => (
+                      <div
+                        key={f.label}
+                        className="flex items-start justify-between gap-4"
+                      >
+                        <dt className="flex items-center gap-2 text-zinc-600">
+                          {f.icon}
+                          <span>{f.label}</span>
+                        </dt>
+                        <dd className="font-medium text-zinc-900">{f.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
 
-              {/* --- REKLAMA: stały obraz z /public jako tło --- */}
-              <div className="rounded-2xl border overflow-hidden h-64 sm:h-72 lg:h-80">
+              {/* REKLAMA – proporcje jak w galerii */}
+              <div className="rounded-2xl border overflow-hidden aspect-[16/9]">
                 <div
                   className="w-full h-full bg-center bg-cover"
                   style={{ backgroundImage: `url('${AD_SRC}')` }}
@@ -161,61 +171,30 @@ export default async function CarPage({ params }: { params: { id: string } }) {
           </aside>
         </div>
 
-        {/* Najważniejsze */}
-        {facts.length > 0 && (
-          <section className="mt-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {facts.map((f, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border p-6 flex flex-col items-center text-center shadow-sm hover:shadow-md transition"
-                >
-                  <div className="mx-auto mb-3 w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700">
-                    {f.icon}
-                  </div>
-                  <div className="text-sm text-zinc-500">{f.label}</div>
-                  <div
-                    className={
-                      f.label === 'Nadwozie'
-                        ? 'text-lg font-semibold mt-1 uppercase tracking-wide'
-                        : 'text-lg font-semibold mt-1'
-                    }
-                  >
-                    {f.value}
-                  </div>
+        {/* Wyposażenie */}
+        {equipment.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4">
+              Wyposażenie
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {equipment.map((code, idx) => (
+                <div key={idx} className="rounded-xl border p-3">
+                  <EquipTile code={code} />
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Informacje dodatkowe */}
+        {/* Informacje dodatkowe (poniżej wyposażenia) */}
         {description && (
-          <Card className="mt-10">
-            <CardHeader>
-              <CardTitle>Informacje dodatkowe</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-zinc max-w-none whitespace-pre-wrap">
-                {description}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Wyposażenie */}
-        {Array.isArray((car as any).equipment) && (car as any).equipment.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold mb-4">Wyposażenie</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {(car as any).equipment.map((code: string) => (
-                <div
-                  key={code}
-                  className="flex flex-col items-center justify-center p-4 border border-zinc-200 rounded-xl bg-white text-sm text-zinc-700 hover:shadow-md transition-shadow"
-                >
-                  <EquipTile code={code} />
-                </div>
-              ))}
+          <section className="mt-8">
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4">
+              Informacje dodatkowe
+            </h2>
+            <div className="rounded-2xl border p-5 text-zinc-800 leading-relaxed whitespace-pre-line">
+              {description}
             </div>
           </section>
         )}

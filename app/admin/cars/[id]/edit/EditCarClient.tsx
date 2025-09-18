@@ -40,6 +40,24 @@ export default function EditCarClient({ id }: Props) {
 
   const [loading, setLoading] = useState(true);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  async function handleDeleteImage(url: string) {
+    try {
+      setDeleting(url);
+      // 1) delete from storage
+      await fetch('/api/upload/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+      // 2) remove from car.images in DB
+      const next = (Array.isArray(car.images) ? car.images : []).filter((u: string) => u !== url);
+      await updateCar(id, { images: next } as any);
+      // mutate local state too
+      (car as any).images = next;
+    } catch (e) {
+      alert('Nie udało się usunąć zdjęcia');
+    } finally {
+      setDeleting(null);
+    }
+  }
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
@@ -530,8 +548,19 @@ description: data.description,
                   <Label>Aktualne zdjęcia</Label>
                   <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3">
                     {car.images.map((src: string, i: number) => (
-                      <img key={i} src={src} alt={`img-${i}`} className="rounded-lg border object-cover w-full h-32" />
-                    ))}
+  <div key={i} className="relative group">
+    <img src={src} alt={`img-${i}`} className="rounded-lg border object-cover w-full h-32" />
+    <button
+      type="button"
+      onClick={() => handleDeleteImage(src)}
+      disabled={deleting === src}
+      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white text-xs px-2 py-1 rounded"
+      title="Usuń zdjęcie"
+    >
+      {deleting === src ? '...' : 'Usuń'}
+    </button>
+  </div>
+))}
                   </div>
                 </div>
               )}
