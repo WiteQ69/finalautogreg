@@ -111,7 +111,24 @@ export default function GoogleReviewsCarousel({
     );
   }
 
-  return (
+  
+
+  // Fallback when API returns error or no reviews
+  const hasError = data && !data.ok;
+  const noData = !loading && (!data || (data.ok && (!data.reviews || data.reviews.length === 0)));
+
+  if (hasError || noData) {
+    return (
+      <section className="rounded-2xl border bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold mb-2">{title ?? 'Opinie Google'}</h2>
+        <p className="text-sm text-zinc-600">
+          {hasError ? 'Nie udało się pobrać opinii. Upewnij się, że na produkcji w Vercel masz ustawione zmienne środowiskowe GOOGLE_PLACES_API_KEY i GOOGLE_PLACE_ID.' : 'Brak opinii do wyświetlenia.'}
+        </p>
+      </section>
+    );
+  }
+
+return (
     <section className="w-full">
       {/* Nagłówek bez tła/ramek */}
       <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-6">{title}</h3>

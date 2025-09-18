@@ -16,7 +16,7 @@ const supabase = createClient(
 );
 
 // Stała ścieżka do reklamy z katalogu /public
-const AD_SRC = '/REKLAMA.JPG';
+const AD_SRC = '/REKLAMA.jpg';
 
 export default async function CarPage({ params }: { params: { id: string } }) {
   const { data: car, error } = await supabase
