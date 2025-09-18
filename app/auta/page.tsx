@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Car as CarIcon, CheckCircle } from 'lucide-react';
@@ -57,6 +56,7 @@ export default function AutaPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-zinc-900 mb-4 tracking-tight">Nasze samochody</h1>
           <p className="text-xl text-zinc-600">Przeglądaj dostępne oferty i zobacz nasze ostatnie sprzedaże</p>
         </motion.div>
+<title>NASZE AUTA AUTOGREG GRZEGORZ PACZYŃSKI</title>
 
         {loading && <div className="text-center text-zinc-500 py-10">Ładuję…</div>}
 

@@ -23,7 +23,7 @@ export default function CarCard({ id, title, coverUrl, defaultStatus = "availabl
     // After toggling, optionally navigate
     if (next === "sold") {
       toggle();
-      router.push("/sprzedane");
+      router.push("/auta");
     } else {
       toggle();
       router.push("/auta");

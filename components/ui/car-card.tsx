@@ -4,10 +4,21 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Heart, BarChart3, Fuel, Gauge, Calendar, Car as CarIcon } from 'lucide-react';
+import {
+  Heart,
+  BarChart3,
+  Fuel,
+  Gauge,
+  Car as CarIcon,
+  Cog,
+  CarFront,
+  Flag,
+  Workflow,
+  CheckCircle2,
+} from 'lucide-react';
 import { Car } from '@/types/car';
 import { useCarStore } from '@/store/car-store';
-import { formatPrice, formatMileage, getFuelTypeLabel, getTransmissionLabel } from '@/lib/format';
+import { formatPrice, formatMileage, getFuelTypeLabel } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 interface CarCardProps {
@@ -15,10 +26,24 @@ interface CarCardProps {
   index?: number;
 }
 
+// pomocnicze labelki
+function docLabel(doc?: string) {
+  if (!doc) return '-';
+  const v = doc.toLowerCase();
+  if (v.includes('vat') && v.includes('23')) return 'Faktura VAT 23%';
+  if (v.includes('vat') && (v.includes('marza') || v.includes('marża'))) return 'Faktura VAT marża';
+  if (v.includes('umowa')) return 'Umowa kupna-sprzedaży';
+  return doc;
+}
+function boolLabel(v?: boolean) {
+  return v ? 'tak' : 'nie';
+}
+
 export function CarCard({ car, index = 0 }: CarCardProps) {
   const [imageError, setImageError] = useState(false);
-  const { favorites, comparison, toggleFavorite, addToComparison, removeFromComparison } = useCarStore();
-  
+  const { favorites, comparison, toggleFavorite, addToComparison, removeFromComparison } =
+    useCarStore();
+
   const isFavorite = favorites.includes(car.id);
   const isInComparison = comparison.includes(car.id);
 
@@ -35,6 +60,26 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
       addToComparison(car.id);
     }
   };
+
+  // dane z różnymi możliwymi nazwami pól
+  const engineCcm =
+    (car as any).engineCapacityCcm ??
+    (car as any).engine_capacity_ccm ??
+    (car as any).engine_capacity ??
+    undefined;
+
+  const powerKm = (car as any).power ?? undefined;
+  const powerKw = (car as any).powerKw ?? (car as any).power_kw ?? undefined;
+
+  const bodyType = (car as any).bodyType ?? (car as any).body_type ?? undefined;
+
+  const importedFrom = (car as any).importedFrom ?? (car as any).imported_from ?? undefined;
+
+  const saleDocument =
+    (car as any).saleDocument ?? (car as any).sale_document ?? (car as any).document ?? undefined;
+
+  const registeredInPoland =
+    (car as any).registeredInPoland ?? (car as any).registered_in_poland ?? undefined;
 
   return (
     <motion.div
@@ -54,7 +99,7 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               onError={() => setImageError(true)}
             />
-            
+
             {/* Action Buttons */}
             <div className="absolute top-3 right-3 flex space-x-2">
               <motion.button
@@ -63,14 +108,12 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
                 onClick={handleToggleFavorite}
                 className={cn(
                   'p-2 rounded-full backdrop-blur-sm transition-all duration-200',
-                  isFavorite
-                    ? 'bg-red-500 text-white'
-                    : 'bg-white/80 text-zinc-600 hover:bg-white'
+                  isFavorite ? 'bg-red-500 text-white' : 'bg-white/80 text-zinc-600 hover:bg-white'
                 )}
               >
                 <Heart className={cn('h-4 w-4', isFavorite && 'fill-current')} />
               </motion.button>
-              
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -78,9 +121,7 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
                 disabled={!isInComparison && comparison.length >= 3}
                 className={cn(
                   'p-2 rounded-full backdrop-blur-sm transition-all duration-200',
-                  isInComparison
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white/80 text-zinc-600 hover:bg-white',
+                  isInComparison ? 'bg-blue-500 text-white' : 'bg-white/80 text-zinc-600 hover:bg-white',
                   !isInComparison && comparison.length >= 3 && 'opacity-50 cursor-not-allowed'
                 )}
               >
@@ -105,49 +146,88 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
               </h3>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-2xl font-bold text-zinc-900">
-                  {car.price != null ? formatPrice(car.price) : (car.price_text ?? 'Brak ceny')}
+                  {car.price != null ? formatPrice(car.price) : car.price_text ?? 'Brak ceny'}
                 </span>
                 <span className="text-sm text-zinc-500">{car.year ?? ''}</span>
               </div>
             </div>
 
-            {/* Key Specs */}
+            {/* Key Specs – KOLEJNOŚĆ wg prośby */}
             <div className="flex flex-col gap-2 text-xs text-zinc-600">
+              {/* 1. Poj. silnika */}
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Gauge className="h-3 w-3 text-zinc-500" />
+                  <Cog className="h-3 w-3 text-zinc-500" />
                 </div>
-                <span>{formatMileage(car.mileage)}</span>
+                <span>{engineCcm ? `${engineCcm} cm³` : '-'}</span>
               </div>
+
+              {/* 2. Paliwo */}
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
                   <Fuel className="h-3 w-3 text-zinc-500" />
                 </div>
                 <span>{getFuelTypeLabel(car.fuelType ?? undefined)}</span>
               </div>
+
+              {/* 3. Moc */}
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <CarIcon className="h-3 w-3 text-zinc-500" />
+                  <Gauge className="h-3 w-3 text-zinc-500" />
                 </div>
-                <span>{getTransmissionLabel(car.transmission ?? undefined)}</span>
+                <span>
+                  {powerKm != null
+                    ? `${powerKm} KM`
+                    : powerKw != null
+                    ? `${powerKw} kW`
+                    : '-'}
+                </span>
               </div>
+
+              {/* 4. Przebieg */}
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Calendar className="h-3 w-3 text-zinc-500" />
+                  <Gauge className="h-3 w-3 text-zinc-500" />
                 </div>
-                <span>{car.power} KM</span>
+                <span>{formatMileage(car.mileage)}</span>
               </div>
+
+              {/* 5. Nadwozie */}
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Calendar className="h-3 w-3 text-zinc-500" />
+                  <CarFront className="h-3 w-3 text-zinc-500" />
                 </div>
-                <span>{car.year}</span>
+                <span>{bodyType ?? '-'}</span>
+              </div>
+
+              {/* 6. Skąd sprowadzony */}
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+                  <Flag className="h-3 w-3 text-zinc-500" />
+                </div>
+                <span>{importedFrom ?? '-'}</span>
+              </div>
+
+              {/* 7. Dokument sprzedaży */}
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+                  <Workflow className="h-3 w-3 text-zinc-500" />
+                </div>
+                <span>{docLabel(saleDocument)}</span>
+              </div>
+
+              {/* 8. Zarejestrowany */}
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+                  <CheckCircle2 className="h-3 w-3 text-zinc-500" />
+                </div>
+                <span>{registeredInPoland === undefined ? '-' : boolLabel(registeredInPoland)}</span>
               </div>
             </div>
 
             {/* Location */}
             <div className="mt-4 pt-4 border-t border-zinc-100">
-              <span className="text-xs text-zinc-500">{car.location}</span>
+              <span className="text-xs text-zinc-500">{(car as any).location}</span>
             </div>
           </div>
         </div>

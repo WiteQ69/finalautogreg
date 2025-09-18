@@ -3,20 +3,58 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
 import EquipTile from './EquipTile';
-import { Gauge, Fuel, Workflow, CarFront, Cog, Bolt } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Gauge,
+  Fuel,
+  Workflow,
+  CarFront,
+  Cog,
+  Bolt,
+  Flag,
+  CheckCircle2,
+} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Supabase client (server)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Stała ścieżka do reklamy z katalogu /public
 const AD_SRC = '/REKLAMA.jpg';
+
+/* ---------- helpers ---------- */
+function pick<T = any>(
+  obj: Record<string, any>,
+  keys: string[],
+  fallback: T | undefined = undefined
+): T | undefined {
+  for (const k of keys) {
+    if (k in obj) {
+      const v = obj[k];
+      if (v !== undefined && v !== null && String(v).trim?.() !== '') return v as T;
+      // jeśli boolean/number 0 -> akceptuj
+      if (typeof v === 'boolean' || typeof v === 'number') return v as T;
+    }
+  }
+  return fallback;
+}
+function num(val: any): number | undefined {
+  const n = typeof val === 'number' ? val : Number(val);
+  return Number.isFinite(n) ? n : undefined;
+}
+function boolToTakNie(v: any): string {
+  if (typeof v === 'boolean') return v ? 'tak' : 'nie';
+  if (typeof v === 'number') return v === 1 ? 'tak' : v === 0 ? 'nie' : '-';
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase();
+    if (['tak', 'yes', 'true', '1', 'y', 't'].includes(s)) return 'tak';
+    if (['nie', 'no', 'false', '0', 'n', 'f'].includes(s)) return 'nie';
+  }
+  return '-';
+}
+/* ----------------------------- */
 
 export default async function CarPage({ params }: { params: { id: string } }) {
   const { data: car, error } = await supabase
@@ -27,44 +65,45 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   if (error || !car) notFound();
 
-  // Liczby
-  const mileageNum =
-    typeof (car as any).mileage === 'number'
-      ? (car as any).mileage
-      : Number((car as any).mileage ?? NaN);
-
+  // Liczbowe
+  const mileageNum = num((car as any).mileage);
   const engineCapacityCcm =
-    typeof (car as any).engineCapacityCcm === 'number'
-      ? (car as any).engineCapacityCcm
-      : Number((car as any).engine_capacity_ccm ?? NaN);
-
+    num((car as any).engineCapacityCcm) ??
+    num((car as any).engine_capacity_ccm) ??
+    num((car as any).engine_capacity);
   const powerKwNum =
-    typeof (car as any).powerKw === 'number'
-      ? (car as any).powerKw
-      : typeof (car as any).power_kw === 'number'
-      ? (car as any).power_kw
-      : Number((car as any).power_kw ?? NaN);
+    num((car as any).powerKw) ??
+    num((car as any).power_kw);
 
   // Tekstowe
   const paliwo: string | undefined =
-    (car as any).fuelType ?? (car as any).fuel_type ?? (car as any).fueltype;
-
+    (car as any).fuelType ?? (car as any).fuel_type;
   const nadwozieRaw: string | undefined =
-    (car as any).bodyType ?? (car as any).body_type ?? (car as any).bodytype;
+    (car as any).bodyType ?? (car as any).body_type;
 
   const saleDocumentRaw: string | undefined =
-    (car as any).saleDocument ?? (car as any).sale_document ?? undefined;
+    (car as any).saleDocument ?? (car as any).sale_document;
 
   const saleDocumentText =
-    saleDocumentRaw === 'umowa'
+    saleDocumentRaw?.toLowerCase?.() === 'umowa'
       ? 'Umowa kupna-sprzedaży'
-      : saleDocumentRaw === 'vat_marza'
+      : saleDocumentRaw?.toLowerCase?.() === 'vat_marza' || saleDocumentRaw?.toLowerCase?.() === 'vat marża'
       ? 'Faktura VAT marża'
-      : saleDocumentRaw === 'vat23'
+      : saleDocumentRaw?.toLowerCase?.() === 'vat23' || saleDocumentRaw?.toLowerCase?.() === 'vat 23'
       ? 'Faktura VAT 23%'
-      : saleDocumentRaw ?? undefined;
+      : saleDocumentRaw ?? '-';
 
-  // Obrazy / wideo / opis / wyposażenie
+  /* === KLUCZ: ORIGINS / REGISTERED_IN z panelem ===
+     łapiemy uppercase (ORIGINS, REGISTERED_IN), lowercase (origins, registered_in),
+     i ewentualne inne warianty na wszelki wypadek.
+  */
+  const importedFrom: string =
+    pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ?? '-';
+
+ const registeredText: string =
+  pick<string>(car as any, ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'], '-') ?? '-';
+
+  // Media / opis / wyposażenie
   const images: string[] =
     Array.isArray((car as any).images) && (car as any).images.length > 0
       ? (car as any).images
@@ -78,39 +117,29 @@ export default async function CarPage({ params }: { params: { id: string } }) {
     ? (car as any).equipment
     : [];
 
-  // Fakty do „po prawej”
+  // Fakty — KOLEJNOŚĆ (zawsze pokazujemy; gdy brak → '-')
   const facts = [
     {
       icon: <Gauge className="h-5 w-5" />,
       label: 'Przebieg',
-      value: Number.isFinite(mileageNum)
-        ? `${mileageNum.toLocaleString('pl-PL')} km`
-        : undefined,
+      value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
     },
-    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo },
-    {
-      icon: <CarFront className="h-5 w-5" />,
-      label: 'Nadwozie',
-      value: nadwozieRaw,
-    },
+    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo ?? '-' },
+    { icon: <CarFront className="h-5 w-5" />, label: 'Nadwozie', value: nadwozieRaw ?? '-' },
+    { icon: <Flag className="h-5 w-5" />, label: 'Sprowadzony z', value: importedFrom ?? '-' },
+    { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
     {
       icon: <Cog className="h-5 w-5" />,
       label: 'Poj. silnika',
-      value: Number.isFinite(engineCapacityCcm)
-        ? `${engineCapacityCcm} cm³`
-        : undefined,
+      value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
     },
     {
       icon: <Bolt className="h-5 w-5" />,
       label: 'Moc',
-      value: Number.isFinite(powerKwNum) ? `${powerKwNum} kW` : undefined,
+      value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
     },
-    {
-      icon: <Workflow className="h-5 w-5" />,
-      label: 'Dokument sprzedaży',
-      value: saleDocumentText,
-    },
-  ].filter((f) => !!f.value);
+    { icon: <Workflow className="h-5 w-5" />, label: 'Dokument sprzedaży', value: saleDocumentText },
+  ];
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -140,30 +169,25 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                 )}
               </div>
 
-              {/* Pochodzenie / rejestracja / dokument – fakty */}
-              {facts.length > 0 && (
-                <div className="rounded-2xl border p-5">
-                  <dl className="space-y-2 text-sm">
-                    {facts.map((f) => (
-                      <div
-                        key={f.label}
-                        className="flex items-start justify-between gap-4"
-                      >
-                        <dt className="flex items-center gap-2 text-zinc-600">
-                          {f.icon}
-                          <span>{f.label}</span>
-                        </dt>
-                        <dd className="font-medium text-zinc-900">{f.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              )}
+              {/* Fakty */}
+              <div className="rounded-2xl border p-5">
+                <dl className="space-y-2 text-sm">
+                  {facts.map((f) => (
+                    <div key={f.label} className="flex items-start justify-between gap-4">
+                      <dt className="flex items-center gap-2 text-zinc-600">
+                        {f.icon}
+                        <span>{f.label}</span>
+                      </dt>
+                      <dd className="font-medium text-zinc-900">{f.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
 
-              {/* REKLAMA – proporcje jak w galerii */}
+              {/* REKLAMA */}
               <div className="rounded-2xl border overflow-hidden aspect-[16/9]">
                 <div
-                  className="w-full h-full bg-center bg-cover"
+                  className="w-full h-full bg-center bg-contain bg-no-repeat"
                   style={{ backgroundImage: `url('${AD_SRC}')` }}
                 />
               </div>
@@ -187,7 +211,7 @@ export default async function CarPage({ params }: { params: { id: string } }) {
           </section>
         )}
 
-        {/* Informacje dodatkowe (poniżej wyposażenia) */}
+        {/* Informacje dodatkowe */}
         {description && (
           <section className="mt-8">
             <h2 className="text-xl font-semibold text-zinc-900 mb-4">
