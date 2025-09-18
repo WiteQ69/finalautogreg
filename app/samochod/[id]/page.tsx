@@ -33,7 +33,7 @@ function pick<T = any>(
   for (const k of keys) {
     if (k in obj) {
       const v = obj[k];
-      if (v !== undefined && v !== null && String(v).trim?.() !== '') return v as T;
+      if (v !== undefined && v !== null && (typeof v === 'string' ? v.trim() !== '' : true)) return v as T;
       // jeśli boolean/number 0 -> akceptuj
       if (typeof v === 'boolean' || typeof v === 'number') return v as T;
     }
@@ -93,6 +93,26 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       ? 'Faktura VAT 23%'
       : saleDocumentRaw ?? '-';
 
+  // Normalizacja na potrzeby podpowiedzi PCC
+  const saleDocNormalized =
+    saleDocumentRaw?.toLowerCase?.().replace(/\s+/g, '_') ?? undefined;
+
+  const saleDocPccNote =
+    saleDocNormalized === 'vat_marza'
+      ? {
+          text: 'Nie płacisz podatku PCC 2% w urzędzie skarbowym.',
+          classes:
+            'mt-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md p-2',
+        }
+      : saleDocNormalized === 'umowa'
+      ? {
+          text:
+            'Musisz zapłacić podatek PCC 2% w urzędzie skarbowym w ciągu 14 dni od podpisania umowy (formularz PCC-3).',
+          classes:
+            'mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2',
+        }
+      : null;
+
   /* === KLUCZ: ORIGINS / REGISTERED_IN z panelem ===
      łapiemy uppercase (ORIGINS, REGISTERED_IN), lowercase (origins, registered_in),
      i ewentualne inne warianty na wszelki wypadek.
@@ -100,8 +120,8 @@ export default async function CarPage({ params }: { params: { id: string } }) {
   const importedFrom: string =
     pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ?? '-';
 
- const registeredText: string =
-  pick<string>(car as any, ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'], '-') ?? '-';
+  const registeredText: string =
+    pick<string>(car as any, ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'], '-') ?? '-';
 
   // Media / opis / wyposażenie
   const images: string[] =
@@ -173,12 +193,19 @@ export default async function CarPage({ params }: { params: { id: string } }) {
               <div className="rounded-2xl border p-5">
                 <dl className="space-y-2 text-sm">
                   {facts.map((f) => (
-                    <div key={f.label} className="flex items-start justify-between gap-4">
-                      <dt className="flex items-center gap-2 text-zinc-600">
-                        {f.icon}
-                        <span>{f.label}</span>
-                      </dt>
-                      <dd className="font-medium text-zinc-900">{f.value}</dd>
+                    <div key={f.label} className="w-full">
+                      <div className="flex items-start justify-between gap-4">
+                        <dt className="flex items-center gap-2 text-zinc-600">
+                          {f.icon}
+                          <span>{f.label}</span>
+                        </dt>
+                        <dd className="font-medium text-zinc-900">{f.value}</dd>
+                      </div>
+
+                      {/* Podpowiedź PCC bezpośrednio pod „Dokument sprzedaży” */}
+                      {f.label === 'Dokument sprzedaży' && saleDocPccNote && (
+                        <p className={saleDocPccNote.classes}>{saleDocPccNote.text}</p>
+                      )}
                     </div>
                   ))}
                 </dl>
