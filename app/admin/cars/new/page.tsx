@@ -51,21 +51,17 @@ export default function NewCarPage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
   async function uploadFiles(files: File[]) {
-  const urls: string[] = [];
-
-  for (const file of files) {
-    const fd = new FormData();
-    fd.append('file', file); // 👈 klucz MUSI być 'file'
-
-    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    urls.push(data.url);
+    const urls: string[] = [];
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('file', file); // 👈 backend oczekuje klucza 'file'
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      urls.push(data.url);
+    }
+    return urls;
   }
-
-  return urls;
-}
 
   const onSubmit = async (data: CarFormData) => {
     try {
@@ -296,7 +292,6 @@ export default function NewCarPage() {
                     <Label htmlFor="price_text">Cena / opis ceny</Label>
                     <Input id="price_text" placeholder="np. 189 000 PLN lub 'Cena do uzgodnienia'" {...register('price_text')} />
                   </div>
-                  
                 </div>
 
                 {/* ZDJĘCIA + WIDEO */}
