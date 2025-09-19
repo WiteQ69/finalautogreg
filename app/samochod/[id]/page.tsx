@@ -158,10 +158,10 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       value: (car as any).technicalCondition ?? (car as any).condition ?? '-',
     },
     { icon: <CarFront className="h-5 w-5" />, label: 'Nadwozie', value: nadwozieRaw ?? '-' },
+  { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
     { icon: <Flag className="h-5 w-5" />, label: 'Sprowadzony z', value: importedFrom ?? '-' },
     { icon: <Workflow className="h-5 w-5" />, label: 'Dokument sprzedaży', value: saleDocumentText },
-    { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
-  ];
+    ];
 
   return (
     <div className="min-h-screen bg-white pt-6">
