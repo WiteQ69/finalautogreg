@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
 import EquipTile from './EquipTile';
+import Image from 'next/image';
 import {
   Gauge,
   Fuel,
@@ -22,7 +23,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const AD_SRC = '/REKLAMA.png';
+const AD_SRC = '/REKLAMA1.jpg';
 
 /* ---------- helpers ---------- */
 function pick<T = any>(
@@ -211,13 +212,18 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                 </dl>
               </div>
 
-              {/* REKLAMA */}
-              <div className="rounded-2xl border overflow-hidden aspect-[16/9]">
-                <div
-                  className="w-full h-full bg-center bg-contain bg-no-repeat"
-                  style={{ backgroundImage: `url('${AD_SRC}')` }}
-                />
-              </div>
+             {/* REKLAMA */}
+{/* REKLAMA */}
+<div className="rounded-2xl border overflow-hidden">
+  <Image
+    src={AD_SRC}
+    alt="Reklama AUTO GREG"
+    width={1200}
+    height={675}
+    className="w-full h-auto"
+    priority={false}
+  />
+</div>
             </div>
           </aside>
         </div>
