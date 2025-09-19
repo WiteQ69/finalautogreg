@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
 import EquipTile from './EquipTile';
-import Image from 'next/image';
 import {
   Gauge,
   Fuel,
@@ -13,6 +12,9 @@ import {
   Bolt,
   Flag,
   CheckCircle2,
+  Settings,
+  Move,
+  Wrench,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -23,8 +25,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const AD_SRC = '/REKLAMA2.jpg';
-
 /* ---------- helpers ---------- */
 function pick<T = any>(
   obj: Record<string, any>,
@@ -34,8 +34,8 @@ function pick<T = any>(
   for (const k of keys) {
     if (k in obj) {
       const v = obj[k];
-      if (v !== undefined && v !== null && (typeof v === 'string' ? v.trim() !== '' : true)) return v as T;
-      // jeśli boolean/number 0 -> akceptuj
+      if (v !== undefined && v !== null && (typeof v === 'string' ? v.trim() !== '' : true))
+        return v as T;
       if (typeof v === 'boolean' || typeof v === 'number') return v as T;
     }
   }
@@ -44,16 +44,6 @@ function pick<T = any>(
 function num(val: any): number | undefined {
   const n = typeof val === 'number' ? val : Number(val);
   return Number.isFinite(n) ? n : undefined;
-}
-function boolToTakNie(v: any): string {
-  if (typeof v === 'boolean') return v ? 'tak' : 'nie';
-  if (typeof v === 'number') return v === 1 ? 'tak' : v === 0 ? 'nie' : '-';
-  if (typeof v === 'string') {
-    const s = v.trim().toLowerCase();
-    if (['tak', 'yes', 'true', '1', 'y', 't'].includes(s)) return 'tak';
-    if (['nie', 'no', 'false', '0', 'n', 'f'].includes(s)) return 'nie';
-  }
-  return '-';
 }
 /* ----------------------------- */
 
@@ -66,21 +56,15 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   if (error || !car) notFound();
 
-  // Liczbowe
   const mileageNum = num((car as any).mileage);
   const engineCapacityCcm =
     num((car as any).engineCapacityCcm) ??
     num((car as any).engine_capacity_ccm) ??
     num((car as any).engine_capacity);
-  const powerKwNum =
-    num((car as any).powerKw) ??
-    num((car as any).power_kw);
+  const powerKwNum = num((car as any).powerKw) ?? num((car as any).power_kw);
 
-  // Tekstowe
-  const paliwo: string | undefined =
-    (car as any).fuelType ?? (car as any).fuel_type;
-  const nadwozieRaw: string | undefined =
-    (car as any).bodyType ?? (car as any).body_type;
+  const paliwo: string | undefined = (car as any).fuelType ?? (car as any).fuel_type;
+  const nadwozieRaw: string | undefined = (car as any).bodyType ?? (car as any).body_type;
 
   const saleDocumentRaw: string | undefined =
     (car as any).saleDocument ?? (car as any).sale_document;
@@ -94,7 +78,6 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       ? 'Faktura VAT 23%'
       : saleDocumentRaw ?? '-';
 
-  // Normalizacja na potrzeby podpowiedzi PCC
   const saleDocNormalized =
     saleDocumentRaw?.toLowerCase?.().replace(/\s+/g, '_') ?? undefined;
 
@@ -114,17 +97,17 @@ export default async function CarPage({ params }: { params: { id: string } }) {
         }
       : null;
 
-  /* === KLUCZ: ORIGINS / REGISTERED_IN z panelem ===
-     łapiemy uppercase (ORIGINS, REGISTERED_IN), lowercase (origins, registered_in),
-     i ewentualne inne warianty na wszelki wypadek.
-  */
   const importedFrom: string =
-    pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ?? '-';
+    pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ??
+    '-';
 
   const registeredText: string =
-    pick<string>(car as any, ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'], '-') ?? '-';
+    pick<string>(
+      car as any,
+      ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'],
+      '-'
+    ) ?? '-';
 
-  // Media / opis / wyposażenie
   const images: string[] =
     Array.isArray((car as any).images) && (car as any).images.length > 0
       ? (car as any).images
@@ -138,50 +121,44 @@ export default async function CarPage({ params }: { params: { id: string } }) {
     ? (car as any).equipment
     : [];
 
-  // Fakty — KOLEJNOŚĆ (zawsze pokazujemy; gdy brak → '-')
+  // Fakty — kolejność
   const facts = [
-  {
-    icon: <Cog className="h-5 w-5" />,
-    label: 'Poj. silnika',
-    value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
-  },
-  {
-    icon: <Fuel className="h-5 w-5" />,
-    label: 'Paliwo',
-    value: paliwo ? paliwo.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Bolt className="h-5 w-5" />,
-    label: 'Moc',
-    value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
-  },
-  {
-    icon: <Gauge className="h-5 w-5" />,
-    label: 'Przebieg',
-    value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
-  },
-  {
-    icon: <CarFront className="h-5 w-5" />,
-    label: 'Nadwozie',
-    value: nadwozieRaw ? nadwozieRaw.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Flag className="h-5 w-5" />,
-    label: 'Sprowadzony z',
-    value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <CheckCircle2 className="h-5 w-5" />,
-    label: 'Zarejestrowany',
-    value: registeredText ? registeredText.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Workflow className="h-5 w-5" />,
-    label: 'Dokument sprzedaży',
-    value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
-  },
-];
-
+    {
+      icon: <Cog className="h-5 w-5" />,
+      label: 'Poj. silnika',
+      value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
+    },
+    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo ?? '-' },
+    {
+      icon: <Bolt className="h-5 w-5" />,
+      label: 'Moc',
+      value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
+    },
+    {
+      icon: <Gauge className="h-5 w-5" />,
+      label: 'Przebieg',
+      value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
+    },
+    {
+      icon: <Settings className="h-5 w-5" />,
+      label: 'Skrzynia',
+      value: (car as any).transmission ?? '-',
+    },
+    {
+      icon: <Move className="h-5 w-5" />,
+      label: 'Napęd',
+      value: (car as any).drivetrain ?? '-',
+    },
+    {
+      icon: <Wrench className="h-5 w-5" />,
+      label: 'Stan techniczny',
+      value: (car as any).technicalCondition ?? (car as any).condition ?? '-',
+    },
+    { icon: <CarFront className="h-5 w-5" />, label: 'Nadwozie', value: nadwozieRaw ?? '-' },
+    { icon: <Flag className="h-5 w-5" />, label: 'Sprowadzony z', value: importedFrom ?? '-' },
+    { icon: <Workflow className="h-5 w-5" />, label: 'Dokument sprzedaży', value: saleDocumentText },
+    { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
+  ];
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -197,17 +174,13 @@ export default async function CarPage({ params }: { params: { id: string } }) {
             <div className="lg:sticky lg:top-8 space-y-4">
               {/* Tytuł / cena */}
               <div className="rounded-2xl border p-5">
-                <h1 className="text-2xl font-bold text-zinc-900">
-                  {(car as any).title}
-                </h1>
+                <h1 className="text-2xl font-bold text-zinc-900">{(car as any).title}</h1>
                 <p className="text-zinc-600 mt-1">
                   {(car as any).year}
                   {(car as any).engine ? ` • ${(car as any).engine}` : ''}
                 </p>
                 {(car as any).price_text && (
-                  <div className="text-1xl font-semibold mt-4">
-                    {(car as any).price_text}
-                  </div>
+                  <div className="text-1xl font-semibold mt-4">{(car as any).price_text}</div>
                 )}
               </div>
 
@@ -223,8 +196,6 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                         </dt>
                         <dd className="font-medium text-zinc-900">{f.value}</dd>
                       </div>
-
-                      {/* Podpowiedź PCC bezpośrednio pod „Dokument sprzedaży” */}
                       {f.label === 'Dokument sprzedaży' && saleDocPccNote && (
                         <p className={saleDocPccNote.classes}>{saleDocPccNote.text}</p>
                       )}
@@ -232,19 +203,6 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                   ))}
                 </dl>
               </div>
-
-             {/* REKLAMA */}
-{/* REKLAMA */}
-<div className="rounded-2xl border overflow-hidden">
-  <Image
-    src={AD_SRC}
-    alt="Reklama AUTO GREG"
-    width={1200}
-    height={675}
-    className="w-full h-auto"
-    priority={false}
-  />
-</div>
             </div>
           </aside>
         </div>
@@ -252,9 +210,7 @@ export default async function CarPage({ params }: { params: { id: string } }) {
         {/* Wyposażenie */}
         {equipment.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-xl font-semibold text-zinc-900 mb-4">
-              Wyposażenie
-            </h2>
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4">Wyposażenie</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {equipment.map((code, idx) => (
                 <div key={idx} className="rounded-xl border p-3">
@@ -268,9 +224,7 @@ export default async function CarPage({ params }: { params: { id: string } }) {
         {/* Informacje dodatkowe */}
         {description && (
           <section className="mt-8">
-            <h2 className="text-xl font-semibold text-zinc-900 mb-4">
-              Informacje dodatkowe
-            </h2>
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4">Informacje dodatkowe</h2>
             <div className="rounded-2xl border p-5 text-zinc-800 leading-relaxed whitespace-pre-line">
               {description}
             </div>
