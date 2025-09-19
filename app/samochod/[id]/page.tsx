@@ -140,27 +140,48 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   // Fakty — KOLEJNOŚĆ (zawsze pokazujemy; gdy brak → '-')
   const facts = [
-    {
-      icon: <Gauge className="h-5 w-5" />,
-      label: 'Przebieg',
-      value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
-    },
-    { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo ?? '-' },
-    { icon: <CarFront className="h-5 w-5" />, label: 'Nadwozie', value: nadwozieRaw ?? '-' },
-    { icon: <Flag className="h-5 w-5" />, label: 'Sprowadzony z', value: importedFrom ?? '-' },
-    { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
-    {
-      icon: <Cog className="h-5 w-5" />,
-      label: 'Poj. silnika',
-      value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
-    },
-    {
-      icon: <Bolt className="h-5 w-5" />,
-      label: 'Moc',
-      value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
-    },
-    { icon: <Workflow className="h-5 w-5" />, label: 'Dokument sprzedaży', value: saleDocumentText },
-  ];
+  {
+    icon: <Cog className="h-5 w-5" />,
+    label: 'Poj. silnika',
+    value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
+  },
+  {
+    icon: <Fuel className="h-5 w-5" />,
+    label: 'Paliwo',
+    value: paliwo ? paliwo.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <Bolt className="h-5 w-5" />,
+    label: 'Moc',
+    value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
+  },
+  {
+    icon: <Gauge className="h-5 w-5" />,
+    label: 'Przebieg',
+    value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
+  },
+  {
+    icon: <CarFront className="h-5 w-5" />,
+    label: 'Nadwozie',
+    value: nadwozieRaw ? nadwozieRaw.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <Flag className="h-5 w-5" />,
+    label: 'Sprowadzony z',
+    value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <CheckCircle2 className="h-5 w-5" />,
+    label: 'Zarejestrowany',
+    value: registeredText ? registeredText.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <Workflow className="h-5 w-5" />,
+    label: 'Dokument sprzedaży',
+    value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
+  },
+];
+
 
   return (
     <div className="min-h-screen bg-white pt-6">

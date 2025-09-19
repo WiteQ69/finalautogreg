@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // ----- Słowniki jako const-tuples -----
 export const FUEL_TYPES = [
-  'benzyna',
+  'BENZYNA',
   'diesel',
   'benzyna_lpg',
   'hybryda',
