@@ -17,6 +17,11 @@ import {
   Wrench,
 } from 'lucide-react';
 
+// nowo: flaga kraju + lista wyposażenia (zielone/białe)
+import CountryBadge from '@/components/ui/CountryBadge';
+import EquipmentList from '@/components/ui/EquipmentList';
+import { EQUIPMENT_LIST } from '@/lib/schemas';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -117,12 +122,26 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   const videoUrl: string | undefined = (car as any).video_url || undefined;
   const description: string | undefined = (car as any).description ?? undefined;
-  const equipment: string[] = Array.isArray((car as any).equipment)
+
+  // lista kodów z bazy (masz)
+  const equipmentSelected: string[] = Array.isArray((car as any).equipment)
     ? (car as any).equipment
     : [];
 
+  // pełna lista z etykietami i informacją czy masz (zielone) czy do dodania (białe)
+  const equipmentItems = EQUIPMENT_LIST.map((item) => ({
+    key: item.key,
+    label: item.label,
+    has: equipmentSelected.includes(item.key),
+  }));
+
   // Fakty — kolejność
-  const facts = [
+  const facts: {
+    icon: React.ReactNode;
+    label: string;
+    value: any;
+    raw?: boolean;
+  }[] = [
     {
       icon: <Cog className="h-5 w-5" />,
       label: 'Poj. silnika',
@@ -158,10 +177,18 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       value: (car as any).technicalCondition ?? (car as any).condition ?? '-',
     },
     { icon: <CarFront className="h-5 w-5" />, label: 'Nadwozie', value: nadwozieRaw ?? '-' },
-  { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
-    { icon: <Flag className="h-5 w-5" />, label: 'Sprowadzony z', value: importedFrom ?? '-' },
+    { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
+
+    // 🔻 tu: zamiast gołego tekstu — znacznik z flagą
+    {
+      icon: <Flag className="h-5 w-5" />,
+      label: 'Sprowadzony z',
+      value: <CountryBadge country={importedFrom} />,
+      raw: true, // nie przerabiamy do UPPERCASE
+    },
+
     { icon: <Workflow className="h-5 w-5" />, label: 'Dokument sprzedaży', value: saleDocumentText },
-    ];
+  ];
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -199,9 +226,9 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                         </dt>
                         <dd className="font-medium text-zinc-900">
                           {f.raw
-                            ? f.value // np. "2000 cm³", "85 kW", "150 000 km" — zostaje jak jest
+                            ? f.value
                             : typeof f.value === 'string'
-                            ? f.value.toUpperCase() // reszta pól capslock
+                            ? f.value.toUpperCase()
                             : f.value}
                         </dd>
                       </div>
@@ -216,17 +243,22 @@ export default async function CarPage({ params }: { params: { id: string } }) {
           </aside>
         </div>
 
-        {/* Wyposażenie */}
-        {equipment.length > 0 && (
+        {/* Wyposażenie — pełna lista: zielone = masz, białe = do dodania */}
+        {equipmentItems.length > 0 && (
           <section className="mt-8">
             <h2 className="text-xl font-semibold text-zinc-900 mb-4">Wyposażenie</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {equipment.map((code, idx) => (
-                <div key={idx} className="rounded-xl border p-3">
+
+            {/* Jeśli chcesz nadal pokazywać tylko posiadane elementy jako kafelki z ikonami, zostawiam sekcję pod spodem (opcjonalna) */}
+            {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+              {equipmentSelected.map((code, idx) => (
+                <div key={idx} className="rounded-xl border p-3 border-emerald-200 bg-white text-emerald-700">
                   <EquipTile code={code} />
                 </div>
               ))}
-            </div>
+            </div> */}
+
+            {/* Docelowa lista: wszystkie pozycje z rozróżnieniem kolorem */}
+            <EquipmentList items={equipmentItems} />
           </section>
         )}
 
