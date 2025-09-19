@@ -127,17 +127,20 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       icon: <Cog className="h-5 w-5" />,
       label: 'Poj. silnika',
       value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
+      raw: true,
     },
     { icon: <Fuel className="h-5 w-5" />, label: 'Paliwo', value: paliwo ?? '-' },
     {
       icon: <Bolt className="h-5 w-5" />,
       label: 'Moc',
       value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
+      raw: true,
     },
     {
       icon: <Gauge className="h-5 w-5" />,
       label: 'Przebieg',
       value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
+      raw: true,
     },
     {
       icon: <Settings className="h-5 w-5" />,
@@ -195,7 +198,11 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                           <span>{f.label}</span>
                         </dt>
                         <dd className="font-medium text-zinc-900">
-                          {typeof f.value === 'string' ? f.value.toUpperCase() : f.value}
+                          {f.raw
+                            ? f.value // np. "2000 cm³", "85 kW", "150 000 km" — zostaje jak jest
+                            : typeof f.value === 'string'
+                            ? f.value.toUpperCase() // reszta pól capslock
+                            : f.value}
                         </dd>
                       </div>
                       {f.label === 'Dokument sprzedaży' && saleDocPccNote && (
