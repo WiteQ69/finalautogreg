@@ -16,11 +16,11 @@ export const CAR_MODELS: Record<string, string[]> = {
 };
 
 export const FUEL_TYPES = [
-  { value: 'gasoline', label: 'Benzyna' },
-  { value: 'diesel', label: 'Diesel' },
-  { value: 'hybrid', label: 'Hybryda' },
-  { value: 'electric', label: 'Elektryczny' },
-  { value: 'lpg', label: 'LPG' }
+  { value: 'gasoline', label: 'benzyna' },
+  { value: 'diesel', label: 'diesel' },
+  { value: 'hybrid', label: 'hybryda' },
+  { value: 'electric', label: 'elektryczny' },
+  { value: 'lpg', label: 'lpg' }
 ];
 
 export const TRANSMISSIONS = [
