@@ -194,7 +194,9 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                           {f.icon}
                           <span>{f.label}</span>
                         </dt>
-                        <dd className="font-medium text-zinc-900">{f.value}</dd>
+                        <dd className="font-medium text-zinc-900">
+                          {typeof f.value === 'string' ? f.value.toUpperCase() : f.value}
+                        </dd>
                       </div>
                       {f.label === 'Dokument sprzedaży' && saleDocPccNote && (
                         <p className={saleDocPccNote.classes}>{saleDocPccNote.text}</p>
