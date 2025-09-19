@@ -35,38 +35,35 @@ export default function KontaktPage() {
     resolver: zodResolver(contactFormSchema),
   });
 
-const onSubmit = async (data: ContactFormData) => {
-  try {
-    // przygotuj payload w formacie wymaganym przez Web3Forms
-    const fd = new FormData();
-    fd.append('access_key', '9ba5e0d7-4171-47bf-ae8e-b25e32214f30'); // Twój klucz
-    fd.append('subject', `Nowa wiadomość z formularza: ${data.name}`);
-    fd.append('from_name', 'Formularz kontaktowy (strona)');
-    fd.append('name', data.name);
-    fd.append('phone', data.phone);
-    fd.append('message', data.message);
-    // honeypot (opcjonalnie zostaw puste):
-    fd.append('botcheck', '');
+  const onSubmit = async (data: ContactFormData) => {
+    try {
+      const fd = new FormData();
+      fd.append('access_key', '9ba5e0d7-4171-47bf-ae8e-b25e32214f30');
+      fd.append('subject', `Nowa wiadomość z formularza: ${data.name}`);
+      fd.append('from_name', 'Formularz kontaktowy (strona)');
+      fd.append('name', data.name);
+      fd.append('phone', data.phone);
+      fd.append('message', data.message);
+      fd.append('botcheck', '');
 
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      body: fd,
-    });
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: fd,
+      });
 
-    const json = await res.json();
+      const json = await res.json();
 
-    if (json.success) {
-      setIsSubmitted(true);
-      reset();
-      setTimeout(() => setIsSubmitted(false), 3000);
-    } else {
-      alert('Błąd przy wysyłce: ' + (json.message || 'Spróbuj ponownie'));
+      if (json.success) {
+        setIsSubmitted(true);
+        reset();
+        setTimeout(() => setIsSubmitted(false), 3000);
+      } else {
+        alert('Błąd przy wysyłce: ' + (json.message || 'Spróbuj ponownie'));
+      }
+    } catch (e: any) {
+      alert('Nie udało się wysłać wiadomości: ' + (e?.message || 'Spróbuj ponownie'));
     }
-  } catch (e: any) {
-    alert('Nie udało się wysłać wiadomości: ' + (e?.message || 'Spróbuj ponownie'));
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -85,9 +82,9 @@ const onSubmit = async (data: ContactFormData) => {
           </p>
         </motion.div>
 
-        {/* 3 kolumny obok siebie (na lg) i równanie wysokości */}
+        {/* 3 kolumny */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-          {/* Kolumna 1 — Formularz (wysokość referencyjna) */}
+          {/* Kolumna 1 — Formularz */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -174,76 +171,88 @@ const onSubmit = async (data: ContactFormData) => {
             </Card>
           </motion.div>
 
-          {/* Kolumna 2 — Informacje kontaktowe + Godziny pod spodem */}
+          {/* Kolumna 2 — Informacje kontaktowe (rozciągnięta na wysokość) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-8 h-full"
+            className="h-full"
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>Informacje kontaktowe</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-zinc-100">
-                    <Phone className="h-6 w-6 text-zinc-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-zinc-900">Telefon</p>
-                    <p className="text-zinc-600">+48 693 632 068</p>
-                  </div>
-                </div>
+           <Card className="h-full flex flex-col">
+  <CardHeader>
+    <CardTitle>Informacje kontaktowe</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-6 flex-1">
+    <div className="flex items-center space-x-4">
+      <div className="p-3 rounded-xl bg-zinc-100">
+        <Phone className="h-6 w-6 text-zinc-600" />
+      </div>
+      <div>
+        <p className="font-semibold text-zinc-900">Telefon</p>
+        <p className="text-zinc-600">+48 693 632 068</p>
+      </div>
+    </div>
 
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-zinc-100">
-                    <Mail className="h-6 w-6 text-zinc-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-zinc-900">Email</p>
-                    <p className="text-zinc-600">autopaczynski@gmail.com</p>
-                  </div>
-                </div>
+    <div className="flex items-center space-x-4">
+      <div className="p-3 rounded-xl bg-zinc-100">
+        <Mail className="h-6 w-6 text-zinc-600" />
+      </div>
+      <div>
+        <p className="font-semibold text-zinc-900">Email</p>
+        <p className="text-zinc-600">autopaczynski@gmail.com</p>
+      </div>
+    </div>
 
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-zinc-100">
-                    <MapPin className="h-6 w-6 text-zinc-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-zinc-900">Adres</p>
-                    <p className="text-zinc-600">
-                      ul. Wenecja 6<br />34-100 Wadowice
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="flex items-center space-x-4">
+      <div className="p-3 rounded-xl bg-zinc-100">
+        <MapPin className="h-6 w-6 text-zinc-600" />
+      </div>
+      <div>
+        <p className="font-semibold text-zinc-900">Lokalizacja</p>
+        <p className="text-zinc-600">
+          ul. Wenecja 6<br />34-100 Wadowice
+        </p>
+      </div>
+    </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Godziny otwarcia</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-zinc-600">Poniedziałek - Piątek</span>
-                    <span className="font-medium text-zinc-900">06:00 - 22:00</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-600">Sobota</span>
-                    <span className="font-medium text-zinc-900">06:00 - 22:00</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-600">Niedziela</span>
-                    <span className="font-medium text-zinc-900">06:00 - 22:00</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="flex items-center space-x-4">
+      <div className="p-3 rounded-xl bg-zinc-100">
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             className="h-6 w-6 text-zinc-600" 
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <p className="font-semibold text-zinc-900">Godziny otwarcia</p>
+        <p className="text-zinc-600">codziennie 06:00 – 22:00</p>
+      </div>
+    </div>
+
+    <div className="flex items-center space-x-4">
+      <div className="p-3 rounded-xl bg-zinc-100">
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             className="h-6 w-6 text-zinc-600" 
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M9 17v-2h6v2a2 2 0 002 2h1a2 2 0 002-2V7a2 2 0 00-2-2h-1V3h-4v2H9V3H5v2H4a2 2 0 00-2 2v10a2 2 0 002 2h1a2 2 0 002-2z" />
+        </svg>
+      </div>
+      <div>
+        <p className="font-semibold text-zinc-900">Dane firmy</p>
+        <p className="text-zinc-600">
+          SIGMA BEATA PACZYŃSKA<br />
+          NIP 5492191680
+        </p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
           </motion.div>
 
-          {/* Kolumna 3 — Mapa; wysokość = wysokość formularza; poprawione klipowanie */}
+          {/* Kolumna 3 — Mapa */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -254,8 +263,6 @@ const onSubmit = async (data: ContactFormData) => {
               <CardHeader>
                 <CardTitle>Gdzie nas znajdziesz</CardTitle>
               </CardHeader>
-
-              {/* WAŻNE: bez p-0; wrapper z rounded + overflow-hidden + shadow */}
               <CardContent className="flex-1">
                 <div className="h-full rounded-2xl overflow-hidden shadow">
                   <iframe

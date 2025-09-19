@@ -45,7 +45,7 @@ function Stars({ value }: { value: number }) {
 
 export default function GoogleReviewsCarousel({
   autoPlayMs = 6000,
-  title  = 'OPINIE KLIENTÓW',
+  title  = 'OPINIE KLIENTÓW Z GOOGLE',
 }: {
   autoPlayMs?: number;
   title?: string;
