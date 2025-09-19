@@ -23,7 +23,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const AD_SRC = '/REKLAMA1.jpg';
+const AD_SRC = '/REKLAMA2.jpg';
 
 /* ---------- helpers ---------- */
 function pick<T = any>(
