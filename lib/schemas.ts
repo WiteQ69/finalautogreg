@@ -1,127 +1,212 @@
 // lib/schemas.ts
-import { z } from 'zod';
+import { z } from "zod";
 
-// ----- Słowniki jako const-tuples -----
+/** Listy pomocnicze (selecty) */
 export const FUEL_TYPES = [
-  'benzyna',
-  'diesel',
-  'benzyna_lpg',
-  'hybryda',
-  'elektryczny',
+  "Benzyna",
+  "Diesel",
+  "Benzyna_LPG",
+  "Hybryda",
+  "Hybryda_PHEV",
+  "Elektryczny",
 ] as const;
 
-export const TRANSMISSIONS = ['manualna', 'automatyczna'] as const;
+export const TRANSMISSIONS = [
+  "Manualna",
+  "Automatyczna",
+  "Półautomatyczna",
+] as const;
 
-export const DRIVETRAINS = ['przód', 'tył', '4x4'] as const;
+export const DRIVETRAINS = [
+  "FWD",
+  "RWD",
+  "AWD",
+  "4x4",
+] as const;
 
 export const BODY_TYPES = [
-  'hatchback',
-  'sedan',
-  'kombi',
-  'suv',
-  'crossover',
-  'coupe',
-  'kabriolet',
-  'van',
-  'dostawczy',
+  "sedan",
+  "hatchback",
+  "kombi",
+  "suv",
+  "coupe",
+  "kabriolet",
+  "minivan",
+  "pickup",
 ] as const;
 
-export const CONDITIONS = ['bezwypadkowy', 'nieuszkodzony'] as const;
+export const CONDITIONS = [
+  "bardzo dobry",
+  "dobry",
+  "do naprawy",
+  "uszkodzony",
+  "nowy",
+  "używany",
+] as const;
 
+/** Kraj pochodzenia i status rejestracji – dostosuj do swoich opcji */
 export const ORIGINS = [
-  'EU',
-  'Salon Polska',
-  'Niemcy',
-  'Belgia',
-  'Holandia',
-  'Włochy',
-  'Austria',
-  'Norwegia',
-  'Szwecja',
-  'Szwajcaria',
-  'Francja',
-  'Polska',
+  "Polska",
+  "Niemcy",
+  "Francja",
+  "Włochy",
+  "Hiszpania",
+  "Holandia",
+  "Belgia",
+  "Szwecja",
+  "Norwegia",
+  "Wielka Brytania",
+  "USA",
+  "Szwajcaria",
+  "Austria",
+  "Czechy",
+  "Słowacja",
 ] as const;
 
-// <-- Dodałeś "NIE" tutaj
-export const REGISTERED_IN = ['PL', 'EU', 'NIE'] as const;
+export const REGISTERED_IN = [
+  "Nie",
+  "Polska",
+  "UE",
+  "Po opłatach",
+] as const;
 
-export const SALE_DOCS = ['umowa', 'vat_marza', 'vat23'] as const;
+export const SALE_DOCS = [
+  "umowa",
+  "vat_marza",
+  "vat23",
+] as const;
 
-// ----- Lista wyposażenia -----
-export const EQUIPMENT_LIST = [
-  { key: 'abs', label: 'ABS' },
-  { key: 'esp', label: 'ESP' },
-  { key: 'asr', label: 'ASR' },
-  { key: 'climate_auto', label: 'Klimatyzacja automatyczna' },
-  { key: 'climate_manual', label: 'Klimatyzacja manualna' },
-  { key: 'parking_sensors', label: 'Czujniki parkowania' },
-  { key: 'rear_camera', label: 'Kamera cofania' },
-  { key: 'nav', label: 'Nawigacja' },
-  { key: 'led', label: 'Światła LED' },
-  { key: 'xenon', label: 'Światła ksenonowe' },
-  { key: 'alloy_wheels', label: 'Alufelgi' },
-  { key: 'heated_seats', label: 'Podgrzewane fotele' },
-  { key: 'heated_wheel', label: 'Podgrzewana kierownica' },
-  { key: 'apple_carplay', label: 'Apple CarPlay' },
-  { key: 'android_auto', label: 'Android Auto' },
-  { key: 'cruise', label: 'Tempomat' },
-  { key: 'adaptive_cruise', label: 'Tempomat aktywny' },
-  { key: 'blind_spot', label: 'Monitoring martwego pola' },
-  { key: 'lane_assist', label: 'Asystent pasa ruchu' },
-  { key: 'keyless', label: 'Bezkluczykowy dostęp' },
-  { key: 'start_stop', label: 'Start/Stop' },
-  { key: 'el_windows', label: 'Elektryczne szyby' },
-  { key: 'el_mirrors', label: 'Elektryczne lusterka' },
-  { key: 'multisteering', label: 'Multikierownica' },
-  { key: 'isofix', label: 'Isofix' },
-  { key: 'fog', label: 'Halogeny' },
-  { key: 'roof_rails', label: 'Relingi dachowe' },
-  { key: 'towbar', label: 'Hak' },
-  { key: 'sunroof', label: 'Szyberdach' },
-  { key: 'leather', label: 'Skórzana tapicerka' },
-  { key: 'camera360', label: 'Kamera 360°' },
+/** Wyposażenie – KAŻDY element ma unikalny `key` i polską `label` */
+export type EquipmentEntry = { key: string; label: string };
+
+/**
+ * UZUPEŁNIONA lista – zawiera dotychczasowe opcje + brakujące z Twoich screenów:
+ * - Multikierownica
+ * - Kamera 360°
+ * - Oświetlenie adaptacyjne
+ * - Czujnik zmierzchu
+ * - Światła do jazdy dziennej
+ * - Lampy przeciwmgielne (Halogeny)
+ * - TPMS, itd.
+ */
+export const EQUIPMENT_LIST: EquipmentEntry[] = [
+  // bezpieczeństwo/podstawowe
+  { key: "abs", label: "ABS" },
+  { key: "esp", label: "ESP" },
+  { key: "asr", label: "ASR" },
+  { key: "poduszki_powietrzne", label: "Poduszki powietrzne" },
+  { key: "kurtyny_powietrzne", label: "Kurtyny powietrzne" },
+  { key: "system_sos", label: "System SOS" },
+  { key: "system_wykrywania_zmeczenia", label: "System wykrywania zmęczenia kierowcy" },
+
+  // komfort/klima
+  { key: "klimatyzacja_automatyczna", label: "Klimatyzacja automatyczna" },
+  { key: "klimatyzacja_manualna", label: "Klimatyzacja manualna" },
+  { key: "podgrzewane_fotele", label: "Podgrzewane fotele" },
+  { key: "wentylowane_fotele", label: "Wentylowane fotele" },
+  { key: "elektryczne_fotele", label: "Elektryczne fotele" },
+  { key: "podgrzewana_kierownica", label: "Podgrzewana kierownica" },
+  { key: "kierownica_wielofunkcyjna", label: "Kierownica wielofunkcyjna" }, // alias: Multikierownica
+  { key: "multikierownica", label: "Multikierownica" },
+  { key: "tapicerka_skorzana", label: "Skórzana tapicerka" },
+  { key: "tapicerka_welurowa", label: "Tapicerka welurowa" },
+  { key: "elektryczne_szyby", label: "Elektryczne szyby" },
+  { key: "elektryczne_lusterka", label: "Elektryczne lusterka" },
+  { key: "podgrzewane_lusterka", label: "Podgrzewane lusterka" },
+  { key: "przyciemniane_szyby", label: "Przyciemniane szyby" },
+  { key: "szyberdach", label: "Szyberdach" },
+  { key: "szklany_dach", label: "Szklany dach" },
+
+  // multimedia
+  { key: "apple_carplay", label: "Apple CarPlay" },
+  { key: "android_auto", label: "Android Auto" },
+  { key: "bluetooth", label: "Bluetooth" },
+  { key: "zestaw_glosnomowiacy", label: "Zestaw głośnomówiący" },
+  { key: "system_naglosnienia", label: "System nagłośnienia" },
+  { key: "ekran_dotykowy", label: "Ekran dotykowy" },
+  { key: "gniazdo_usb", label: "Gniazdo USB" },
+  { key: "nawigacja", label: "Nawigacja" },
+
+  // asystenci jazdy
+  { key: "tempomat", label: "Tempomat" },
+  { key: "tempomat_aktywny", label: "Tempomat aktywny" },
+  { key: "asystent_pasa_ruchu", label: "Asystent pasa ruchu" },
+  { key: "asystent_zmiany_pasa_ruchu", label: "Asystent zmiany pasa ruchu" },
+  { key: "monitoring_martwego_pola", label: "Monitoring martwego pola" },
+  { key: "asystent_parkowania", label: "Asystent parkowania" },
+  { key: "czujniki_parkowania", label: "Czujniki parkowania" },
+  { key: "czujniki_parkowania_przod", label: "Czujniki parkowania przód" },
+  { key: "czujniki_parkowania_tyl", label: "Czujniki parkowania tył" },
+  { key: "kamera_cofania", label: "Kamera cofania" },
+  { key: "kamera_360", label: "Kamera 360°" },
+  { key: "kamera_panoramiczna_360", label: "Kamera panoramiczna 360°" },
+  { key: "asystent_hamowania", label: "Asystent hamowania" },
+  { key: "kontrola_odleglosci", label: "Kontrola odległości od pojazdu" },
+  { key: "ogranicznik_predkosci", label: "Ogranicznik prędkości" },
+  { key: "zjazd_ze_stoku", label: "Automatyczna kontrola zjazdu ze stoku" },
+  { key: "pokonywanie_zakretow", label: "Asystent pokonywania zakrętów" },
+  { key: "wspomaganie_ruszania_pod_gore", label: "Wspomaganie ruszania pod górę" },
+  { key: "rozpoznawanie_znakow", label: "System rozpoznawania znaków drogowych" },
+
+  // oświetlenie
+  { key: "swiatla_led", label: "Światła LED" },
+  { key: "swiatla_ksenonowe", label: "Światła ksenonowe" },
+  { key: "oswietlenie_adaptacyjne", label: "Oświetlenie adaptacyjne" },
+  { key: "czujnik_zmierzchu", label: "Czujnik zmierzchu" },
+  { key: "swiatla_do_jazdy_dziennej", label: "Światła do jazdy dziennej" },
+  { key: "lampy_przeciwmgielne", label: "Lampy przeciwmgielne (Halogeny)" },
+  { key: "doswietlanie_zakretow", label: "Doświetlanie zakrętów" },
+  { key: "oswietlenie_drogi_do_domu", label: "Oświetlenie drogi do domu" },
+  { key: "halogeny", label: "Halogeny" }, // alias, jeśli wolisz krócej
+
+  // inne/napęd/koła
+  { key: "alufelgi", label: "Alufelgi" },
+  { key: "relingi_dachowe", label: "Relingi dachowe" },
+  { key: "isofix", label: "Isofix" },
+  { key: "hak", label: "Hak" },
+
+  // dostęp/elektronika
+  { key: "bezkluczykowy_dostep", label: "Bezkluczykowy dostęp" },
+  { key: "start_stop", label: "Start/Stop" },
+  { key: "tpms", label: "Elektroniczna kontrola ciśnienia w oponach (TPMS)" },
+
+  // czujniki
+  { key: "czujnik_deszczu", label: "Czujnik deszczu" },
+
+  // aliasy nazw ze screenów (zachowane jako osobne pozycje lub zduplikowane label)
 ];
 
-// ----- Schemat formularza -----
+/** Schemat formularza dodawania auta */
 export const carFormSchema = z.object({
-  title: z.string().min(2, 'Podaj tytuł'),
-  brand: z.string().min(1, 'Wybierz markę').optional(),
-  model: z.string().min(1, 'Wybierz model').optional(),
-  year: z.number().int().min(1950).max(2050),
-  mileage: z.number().int().min(0),
-  engine: z.string().min(1, 'Podaj opis silnika'),
+  title: z.string().min(2, "Podaj tytuł"),
+  brand: z.string().optional(),
+  model: z.string().optional(),
 
-  price: z.number().int().positive().optional(),
-  engineCapacityCcm: z.number().int().positive().optional(),
-  powerKw: z.number().int().positive().optional(),
-  power: z.number().int().positive().optional(),
-  displacement: z.number().int().positive().optional(),
+  year: z.coerce.number().int().min(1950).max(2050),
+  mileage: z.coerce.number().int().min(0),
+  engine: z.string().min(2),
+
+  engineCapacityCcm: z.coerce.number().int().positive().optional(),
+  powerKw: z.coerce.number().int().positive().optional(),
 
   fuelType: z.enum(FUEL_TYPES).optional(),
   transmission: z.enum(TRANSMISSIONS).optional(),
   drivetrain: z.enum(DRIVETRAINS).optional(),
   bodyType: z.enum(BODY_TYPES).optional(),
   color: z.string().optional(),
-  doors: z.number().int().min(2).max(6).optional(),
-  seats: z.number().int().min(2).max(9).optional(),
+  doors: z.coerce.number().int().min(2).max(6).optional(),
+  seats: z.coerce.number().int().min(2).max(9).optional(),
   condition: z.enum(CONDITIONS).optional(),
-  origin: z.enum(ORIGINS).optional(),
-  registeredIn: z.enum(REGISTERED_IN).optional(),
+
+  origin: z.string().optional(),
+  registeredIn: z.string().optional(),
   saleDocument: z.enum(SALE_DOCS).optional(),
 
   price_text: z.string().optional(),
+
   firstOwner: z.boolean().optional(),
 
-  description: z.string().max(5000).optional(),
-
-  vin: z.string().optional(),
-  location: z.string().optional(),
-  owners: z.number().int().min(1).optional(),
-  accidentFree: z.boolean().optional(),
-  serviceHistory: z.boolean().optional(),
-  status: z.enum(['active', 'sold', 'draft']).optional(),
-
+  // KLUCZOWE: pozwalamy na dowolne stringi (nie tylko z listy), żeby niczego nie blokować
   equipment: z.array(z.string()).optional(),
 });
 
