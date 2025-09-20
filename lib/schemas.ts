@@ -17,12 +17,7 @@ export const TRANSMISSIONS = [
   "Półautomatyczna",
 ] as const;
 
-export const DRIVETRAINS = [
-  "FWD",
-  "RWD",
-  "AWD",
-  "4x4",
-] as const;
+export const DRIVETRAINS = ["FWD", "RWD", "AWD", "4x4"] as const;
 
 export const BODY_TYPES = [
   "sedan",
@@ -44,7 +39,7 @@ export const CONDITIONS = [
   "używany",
 ] as const;
 
-/** Kraj pochodzenia i status rejestracji – dostosuj do swoich opcji */
+/** Kraj pochodzenia i status rejestracji */
 export const ORIGINS = [
   "Polska",
   "Niemcy",
@@ -63,32 +58,13 @@ export const ORIGINS = [
   "Słowacja",
 ] as const;
 
-export const REGISTERED_IN = [
-  "Nie",
-  "Polska",
-  "UE",
-  "Po opłatach",
-] as const;
+export const REGISTERED_IN = ["Nie", "Polska", "UE", "Po opłatach"] as const;
 
-export const SALE_DOCS = [
-  "umowa",
-  "vat_marza",
-  "vat23",
-] as const;
+export const SALE_DOCS = ["umowa", "vat_marza", "vat23"] as const;
 
-/** Wyposażenie – KAŻDY element ma unikalny `key` i polską `label` */
+/** Wyposażenie */
 export type EquipmentEntry = { key: string; label: string };
 
-/**
- * UZUPEŁNIONA lista – zawiera dotychczasowe opcje + brakujące z Twoich screenów:
- * - Multikierownica
- * - Kamera 360°
- * - Oświetlenie adaptacyjne
- * - Czujnik zmierzchu
- * - Światła do jazdy dziennej
- * - Lampy przeciwmgielne (Halogeny)
- * - TPMS, itd.
- */
 export const EQUIPMENT_LIST: EquipmentEntry[] = [
   // bezpieczeństwo/podstawowe
   { key: "abs", label: "ABS" },
@@ -106,7 +82,7 @@ export const EQUIPMENT_LIST: EquipmentEntry[] = [
   { key: "wentylowane_fotele", label: "Wentylowane fotele" },
   { key: "elektryczne_fotele", label: "Elektryczne fotele" },
   { key: "podgrzewana_kierownica", label: "Podgrzewana kierownica" },
-  { key: "kierownica_wielofunkcyjna", label: "Kierownica wielofunkcyjna" }, // alias: Multikierownica
+  { key: "kierownica_wielofunkcyjna", label: "Kierownica wielofunkcyjna" }, // alias multikierownica
   { key: "multikierownica", label: "Multikierownica" },
   { key: "tapicerka_skorzana", label: "Skórzana tapicerka" },
   { key: "tapicerka_welurowa", label: "Tapicerka welurowa" },
@@ -157,7 +133,7 @@ export const EQUIPMENT_LIST: EquipmentEntry[] = [
   { key: "lampy_przeciwmgielne", label: "Lampy przeciwmgielne (Halogeny)" },
   { key: "doswietlanie_zakretow", label: "Doświetlanie zakrętów" },
   { key: "oswietlenie_drogi_do_domu", label: "Oświetlenie drogi do domu" },
-  { key: "halogeny", label: "Halogeny" }, // alias, jeśli wolisz krócej
+  { key: "halogeny", label: "Halogeny" }, // alias krótszy
 
   // inne/napęd/koła
   { key: "alufelgi", label: "Alufelgi" },
@@ -172,11 +148,9 @@ export const EQUIPMENT_LIST: EquipmentEntry[] = [
 
   // czujniki
   { key: "czujnik_deszczu", label: "Czujnik deszczu" },
-
-  // aliasy nazw ze screenów (zachowane jako osobne pozycje lub zduplikowane label)
 ];
 
-/** Schemat formularza dodawania auta */
+/** Schemat formularza dodawania/edycji auta */
 export const carFormSchema = z.object({
   title: z.string().min(2, "Podaj tytuł"),
   brand: z.string().optional(),
@@ -203,10 +177,11 @@ export const carFormSchema = z.object({
   saleDocument: z.enum(SALE_DOCS).optional(),
 
   price_text: z.string().optional(),
+  description: z.string().optional(),          // ⬅️ DODANE
 
   firstOwner: z.boolean().optional(),
 
-  // KLUCZOWE: pozwalamy na dowolne stringi (nie tylko z listy), żeby niczego nie blokować
+  // zostawiamy elastycznie
   equipment: z.array(z.string()).optional(),
 });
 
