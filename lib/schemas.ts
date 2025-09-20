@@ -11,12 +11,7 @@ export const FUEL_TYPES = [
   "Elektryczny",
 ] as const;
 
-export const TRANSMISSIONS = [
-  "Manualna",
-  "Automatyczna",
-  "Półautomatyczna",
-] as const;
-
+export const TRANSMISSIONS = ["Manualna", "Automatyczna", "Półautomatyczna"] as const;
 export const DRIVETRAINS = ["FWD", "RWD", "AWD", "4x4"] as const;
 
 export const BODY_TYPES = [
@@ -59,7 +54,6 @@ export const ORIGINS = [
 ] as const;
 
 export const REGISTERED_IN = ["Nie", "Polska", "UE", "Po opłatach"] as const;
-
 export const SALE_DOCS = ["umowa", "vat_marza", "vat23"] as const;
 
 /** Wyposażenie */
@@ -82,7 +76,7 @@ export const EQUIPMENT_LIST: EquipmentEntry[] = [
   { key: "wentylowane_fotele", label: "Wentylowane fotele" },
   { key: "elektryczne_fotele", label: "Elektryczne fotele" },
   { key: "podgrzewana_kierownica", label: "Podgrzewana kierownica" },
-  { key: "kierownica_wielofunkcyjna", label: "Kierownica wielofunkcyjna" }, // alias multikierownica
+  { key: "kierownica_wielofunkcyjna", label: "Kierownica wielofunkcyjna" },
   { key: "multikierownica", label: "Multikierownica" },
   { key: "tapicerka_skorzana", label: "Skórzana tapicerka" },
   { key: "tapicerka_welurowa", label: "Tapicerka welurowa" },
@@ -133,7 +127,7 @@ export const EQUIPMENT_LIST: EquipmentEntry[] = [
   { key: "lampy_przeciwmgielne", label: "Lampy przeciwmgielne (Halogeny)" },
   { key: "doswietlanie_zakretow", label: "Doświetlanie zakrętów" },
   { key: "oswietlenie_drogi_do_domu", label: "Oświetlenie drogi do domu" },
-  { key: "halogeny", label: "Halogeny" }, // alias krótszy
+  { key: "halogeny", label: "Halogeny" },
 
   // inne/napęd/koła
   { key: "alufelgi", label: "Alufelgi" },
@@ -177,11 +171,12 @@ export const carFormSchema = z.object({
   saleDocument: z.enum(SALE_DOCS).optional(),
 
   price_text: z.string().optional(),
-  description: z.string().optional(),          // ⬅️ DODANE
+  price: z.coerce.number().optional(),   // ⬅️ DODANE, żeby dashboard mógł mieć „price”
+  description: z.string().optional(),    // zostawiamy z poprzedniej poprawki
 
   firstOwner: z.boolean().optional(),
 
-  // zostawiamy elastycznie
+  // elastycznie – nie ograniczamy do z góry zdef. listy
   equipment: z.array(z.string()).optional(),
 });
 
