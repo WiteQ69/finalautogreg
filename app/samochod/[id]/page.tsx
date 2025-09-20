@@ -17,10 +17,8 @@ import {
   Wrench,
 } from 'lucide-react';
 
-// nowo: flaga kraju + lista wyposażenia (zielone/białe)
+// Zostawiamy flagę kraju
 import CountryBadge from '@/components/ui/CountryBadge';
-import EquipmentList from '@/components/ui/EquipmentList';
-import { EQUIPMENT_LIST } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -123,17 +121,10 @@ export default async function CarPage({ params }: { params: { id: string } }) {
   const videoUrl: string | undefined = (car as any).video_url || undefined;
   const description: string | undefined = (car as any).description ?? undefined;
 
-  // lista kodów z bazy (masz)
+  // ➤ TYLKO wybrane kody z bazy (to, co zaznaczyłeś w panelu)
   const equipmentSelected: string[] = Array.isArray((car as any).equipment)
     ? (car as any).equipment
     : [];
-
-  // pełna lista z etykietami i informacją czy masz (zielone) czy do dodania (białe)
-  const equipmentItems = EQUIPMENT_LIST.map((item) => ({
-    key: item.key,
-    label: item.label,
-    has: equipmentSelected.includes(item.key),
-  }));
 
   // Fakty — kolejność
   const facts: {
@@ -179,12 +170,12 @@ export default async function CarPage({ params }: { params: { id: string } }) {
     { icon: <CarFront className="h-5 w-5" />, label: 'Nadwozie', value: nadwozieRaw ?? '-' },
     { icon: <CheckCircle2 className="h-5 w-5" />, label: 'Zarejestrowany', value: registeredText ?? '-' },
 
-    // 🔻 tu: zamiast gołego tekstu — znacznik z flagą
+    // Kraj z flagą (znacznik)
     {
       icon: <Flag className="h-5 w-5" />,
       label: 'Sprowadzony z',
       value: <CountryBadge country={importedFrom} />,
-      raw: true, // nie przerabiamy do UPPERCASE
+      raw: true, // bez uppercasa
     },
 
     { icon: <Workflow className="h-5 w-5" />, label: 'Dokument sprzedaży', value: saleDocumentText },
@@ -243,22 +234,20 @@ export default async function CarPage({ params }: { params: { id: string } }) {
           </aside>
         </div>
 
-        {/* Wyposażenie — pełna lista: zielone = masz, białe = do dodania */}
-        {equipmentItems.length > 0 && (
+        {/* Wyposażenie — TYLKO zaznaczone w panelu (jak wcześniej) */}
+        {equipmentSelected.length > 0 && (
           <section className="mt-8">
             <h2 className="text-xl font-semibold text-zinc-900 mb-4">Wyposażenie</h2>
-
-            {/* Jeśli chcesz nadal pokazywać tylko posiadane elementy jako kafelki z ikonami, zostawiam sekcję pod spodem (opcjonalna) */}
-            {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {equipmentSelected.map((code, idx) => (
-                <div key={idx} className="rounded-xl border p-3 border-emerald-200 bg-white text-emerald-700">
+                <div
+                  key={idx}
+                  className="rounded-xl border p-3 border-emerald-200 bg-white text-emerald-700"
+                >
                   <EquipTile code={code} />
                 </div>
               ))}
-            </div> */}
-
-            {/* Docelowa lista: wszystkie pozycje z rozróżnieniem kolorem */}
-            <EquipmentList items={equipmentItems} />
+            </div>
           </section>
         )}
 
