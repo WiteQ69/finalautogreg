@@ -1,367 +1,448 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Save, ArrowLeft, Eye, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ImageUpload } from '@/components/ui/image-upload';
-import { useCarStore } from '@/store/car-store';
-import { carFormSchema } from '@/lib/schemas';
-import { CAR_BRANDS, CAR_MODELS, FUEL_TYPES, TRANSMISSIONS, BODY_TYPES, DRIVETRAINS, CAR_COLORS } from '@/lib/constants';
-import { mockCars } from '@/data/mock-cars';
-import type { CarFormData } from '@/lib/schemas';
-import Link from 'next/link';
 
-export default function EditCarPage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params.id as string;
-  const [images, setImages] = useState<File[]>([]);
-  
-  const { cars, addCar, updateCar, deleteCar } = useCarStore();
+import {
+  carFormSchema,
+  type CarFormData,
+  FUEL_TYPES,
+  TRANSMISSIONS,
+  DRIVETRAINS,
+  BODY_TYPES,
+  CONDITIONS,
+  ORIGINS,
+  REGISTERED_IN,
+  SALE_DOCS,
+  EQUIPMENT_LIST,
+} from '@/lib/schemas';
 
-  // Initialize with mock data if empty
-  useEffect(() => {
-    if (cars.length === 0) {
-      mockCars.forEach(car => addCar(car));
+/** ---------- helpery ---------- */
+function s(v: any): string | undefined {
+  return typeof v === 'string' && v.trim() !== '' ? v : undefined;
+}
+function n(v: any): number | undefined {
+  const num = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(num) ? num : undefined;
+}
+function pick<T = any>(obj: Record<string, any>, ...keys: string[]): T | undefined {
+  for (const k of keys) {
+    if (k in obj) {
+      const v = obj[k];
+      if (v === 0 || v === false) return v as T;
+      if (v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) return v as T;
     }
-  }, [cars.length, addCar]);
+  }
+  return undefined;
+}
+function norm<T extends readonly string[]>(
+  v: any,
+  allowed: T,
+  aliases: Record<string, T[number]> = {}
+): T[number] | undefined {
+  if (!v) return undefined;
+  const raw = String(v).trim();
+  const al = aliases[raw.toLowerCase()];
+  if (al) return al;
+  const exact = (allowed as readonly string[]).find((x) => x === raw) as T[number] | undefined;
+  if (exact) return exact;
+  const ci = (allowed as readonly string[]).find((x) => x.toLowerCase() === raw.toLowerCase());
+  return (ci as T[number]) ?? undefined;
+}
 
-  const car = cars.find(c => c.id === id);
+const fuelAliases: Record<string, (typeof FUEL_TYPES)[number]> = {
+  benzyna: 'Benzyna',
+  diesel: 'Diesel',
+  'benzyna+lpg': 'Benzyna_LPG',
+  lpg: 'Benzyna_LPG',
+  hybryda: 'Hybryda',
+  phev: 'Hybryda_PHEV',
+  'hybryda_phev': 'Hybryda_PHEV',
+  elektryczny: 'Elektryczny',
+};
+const transmissionAliases: Record<string, (typeof TRANSMISSIONS)[number]> = {
+  manualna: 'Manualna',
+  automat: 'Automatyczna',
+  automatyczna: 'Automatyczna',
+  'pol-automat': 'Półautomatyczna',
+  'półautomatyczna': 'Półautomatyczna',
+};
+const drivetrainAliases: Record<string, (typeof DRIVETRAINS)[number]> = {
+  fwd: 'FWD',
+  przod: 'FWD',
+  'przód': 'FWD',
+  rwd: 'RWD',
+  tyl: 'RWD',
+  'tył': 'RWD',
+  awd: 'AWD',
+  '4x4': '4x4',
+};
+const bodyAliases: Record<string, (typeof BODY_TYPES)[number]> = {
+  sedan: 'sedan',
+  hatchback: 'hatchback',
+  kombi: 'kombi',
+  suv: 'suv',
+  coupe: 'coupe',
+  kabriolet: 'kabriolet',
+  minivan: 'minivan',
+  pickup: 'pickup',
+};
+const conditionAliases: Record<string, (typeof CONDITIONS)[number]> = {
+  'bardzo dobry': 'bardzo dobry',
+  dobry: 'dobry',
+  'do naprawy': 'do naprawy',
+  uszkodzony: 'uszkodzony',
+  nowy: 'nowy',
+  'używany': 'używany',
+  'uzywany': 'używany',
+};
+/** ----------------------------- */
+
+type PageProps = {
+  params: { id: string };
+  // jeżeli wcześniej pobierasz auto jako props, zostaw – można też tutaj dociągnąć fetch
+};
+
+export default function EditCarPage({ params }: PageProps) {
+  const router = useRouter();
+
+  // 🔽 Tu załaduj swoje auto – dopasuj do tego jak je pobierasz (Supabase/API/route handler)
+  const [car, setCar] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      // PRZYKŁAD – jeśli masz endpoint /api/cars/[id]
+      const res = await fetch(`/api/cars?id=${encodeURIComponent(params.id)}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setCar(data || null);
+      } else {
+        setCar(null);
+      }
+      setLoading(false);
+    })();
+  }, [params.id]);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
     setValue,
     watch,
-    reset,
+    formState: { errors, isSubmitting },
   } = useForm<CarFormData>({
     resolver: zodResolver(carFormSchema),
-    defaultValues: car ? {
-      title: `${car.brand} ${car.model} ${car.year}`,
-      brand: car.brand,
-      model: car.model,
-      year: car.year,
-      engine: car.engine || '',
-      price: car.price,
-      mileage: car.mileage,
-      fuelType: car.fuelType,
-      transmission: car.transmission,
-      bodyType: car.bodyType,
-      drivetrain: car.drivetrain,
-      power: car.power,
-      displacement: car.displacement,
-      color: car.color,
-      owners: car.owners,
-      accidentFree: car.accidentFree,
-      serviceHistory: car.serviceHistory,
-      vin: car.vin,
-      location: car.location,
-      status: car.status,
-    } : undefined,
+    defaultValues: car
+      ? {
+          title: s(car.title) ?? `${car.brand ?? ''} ${car.model ?? ''} ${car.year ?? ''}`.trim(),
+          brand: s(car.brand),
+          model: s(car.model),
+          year: n(car.year) ?? 0,
+          engine: s(car.engine) ?? '',
+          price: n(car.price),
+          price_text: s(car.price_text),
+
+          mileage: n(car.mileage) ?? 0,
+          fuelType: norm(car.fuelType ?? car.fuel_type, FUEL_TYPES, fuelAliases),
+          transmission: norm(car.transmission, TRANSMISSIONS, transmissionAliases),
+          drivetrain: norm(car.drivetrain, DRIVETRAINS, drivetrainAliases),
+          bodyType: norm(car.bodyType ?? car.body_type, BODY_TYPES, bodyAliases),
+
+          engineCapacityCcm: n(pick(car, 'engineCapacityCcm', 'engine_capacity_ccm')),
+          powerKw: n(pick(car, 'powerKw', 'power_kw')),
+
+          color: s(car.color),
+          doors: n(car.doors),
+          seats: n(car.seats),
+          condition: norm(car.technicalCondition ?? car.condition, CONDITIONS, conditionAliases),
+
+          origin: s(pick(car, 'origin', 'country', 'kraj')),
+          registeredIn: s(pick(car, 'registeredIn', 'registered', 'zarejestrowany')),
+          saleDocument: s(pick(car, 'saleDocument', 'sale_document)) as any,
+
+          description: s(car.description),
+
+          firstOwner: Boolean(car.firstOwner),
+
+          equipment: Array.isArray(car.equipment) ? car.equipment : [],
+        }
+      : undefined,
   });
 
-  const watchedBrand = watch('brand');
+  const saleDoc = watch('saleDocument');
+  const equipment = watch('equipment') ?? [];
 
-  useEffect(() => {
-    if (car) {
-      reset({
-        title: `${car.brand} ${car.model} ${car.year}`,
-        brand: car.brand,
-        model: car.model,
-        year: car.year,
-        engine: car.engine || '',
-        price: car.price,
-        mileage: car.mileage,
-        fuelType: car.fuelType,
-        transmission: car.transmission,
-        bodyType: car.bodyType,
-        drivetrain: car.drivetrain,
-        power: car.power,
-        displacement: car.displacement,
-        color: car.color,
-        owners: car.owners,
-        accidentFree: car.accidentFree,
-        serviceHistory: car.serviceHistory,
-        vin: car.vin,
-        location: car.location,
-        status: car.status,
+  async function onSubmit(data: CarFormData) {
+    try {
+      const payload = {
+        ...car,
+        title: data.title,
+        brand: data.brand,
+        model: data.model,
+        year: data.year,
+        engine: data.engine,
+
+        price: data.price,
+        price_text: data.price_text,
+
+        mileage: data.mileage,
+        fuelType: data.fuelType,
+        transmission: data.transmission,
+        drivetrain: data.drivetrain,
+        bodyType: data.bodyType,
+
+        engineCapacityCcm: data.engineCapacityCcm,
+        powerKw: data.powerKw,
+
+        color: data.color,
+        doors: data.doors,
+        seats: data.seats,
+        condition: data.condition,
+
+        origin: data.origin,
+        registeredIn: data.registeredIn,
+        saleDocument: data.saleDocument,
+
+        description: data.description,
+        firstOwner: data.firstOwner,
+
+        equipment: data.equipment ?? [],
+        updatedAt: new Date().toISOString(),
+      };
+
+      const res = await fetch('/api/cars', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
+      if (!res.ok) throw new Error('API PUT /api/cars failed');
+      router.push('/admin/cars');
+    } catch (e) {
+      console.error(e);
+      alert('Nie udało się zapisać zmian.');
     }
-  }, [car, reset]);
+  }
 
+  if (loading) {
+    return <div className="p-8">Ładowanie…</div>;
+  }
   if (!car) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-zinc-900 mb-2">Oferta nie znaleziona</h1>
-          <p className="text-zinc-600 mb-6">Nie można znaleźć tej oferty.</p>
-          <Button asChild>
-            <Link href="/dashboard">Powrót do panelu</Link>
-          </Button>
-        </div>
+      <div className="p-8">
+        <p>Nie znaleziono auta.</p>
+        <Button asChild className="mt-4">
+          <Link href="/admin/cars">Wróć do listy</Link>
+        </Button>
       </div>
     );
   }
 
-  const onSubmit = async (data: CarFormData) => {
-    try {
-      updateCar(id, {
-        ...data,
-        images: images.length > 0 
-          ? images.map((_, index) => `https://images.pexels.com/photos/${1280560 + index}/pexels-photo-${1280560 + index}.jpeg`)
-          : car.images,
-      });
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Error updating car:', error);
-    }
-  };
-
-  const handleDelete = () => {
-    if (confirm('Czy na pewno chcesz usunąć tę ofertę?')) {
-      deleteCar(id);
-      router.push('/dashboard');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-zinc-50 py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+    <div className="min-h-screen bg-zinc-50 p-8">
+      <div className="max-w-5xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Button variant="outline" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Powrót
+            <Button asChild variant="outline" size="sm">
+              <Link href="/admin/cars">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Lista samochodów
+              </Link>
             </Button>
           </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">
-                Edytuj ofertę
-              </h1>
-              <p className="text-xl text-zinc-600">
-                {car.brand} {car.model} {car.year}
-              </p>
-            </div>
-
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-              className="hidden sm:flex items-center space-x-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Usuń ofertę</span>
-            </Button>
-          </div>
+          <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">Edytuj samochód</h1>
+          <p className="text-xl text-zinc-600">Zmieniaj dane, dodawaj zdjęcia i (opcjonalnie) wideo</p>
         </motion.div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Podstawowe informacje</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="brand">Marka *</Label>
-                  <Select value={watchedBrand} onValueChange={(value) => setValue('brand', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wybierz markę" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CAR_BRANDS.map((brand) => (
-                        <SelectItem key={brand} value={brand}>
-                          {brand}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.brand && <p className="text-sm text-red-500 mt-1">{errors.brand.message}</p>}
+        <Card>
+          <CardHeader><CardTitle>Informacje o samochodzie</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              {/* PODSTAWOWE */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-3">
+                  <Label htmlFor="title">Tytuł *</Label>
+                  <Input id="title" {...register('title')} />
+                  {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="model">Model *</Label>
-                  <Select 
-                    value={watch('model')}
-                    onValueChange={(value) => setValue('model', value)}
-                    disabled={!watchedBrand}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wybierz model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {watchedBrand && CAR_MODELS[watchedBrand]?.map((model) => (
-                        <SelectItem key={model} value={model}>
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.model && <p className="text-sm text-red-500 mt-1">{errors.model.message}</p>}
+                  <Label htmlFor="brand">Marka</Label>
+                  <Input id="brand" {...register('brand')} />
+                </div>
+                <div>
+                  <Label htmlFor="model">Model</Label>
+                  <Input id="model" {...register('model')} />
                 </div>
 
                 <div>
                   <Label htmlFor="year">Rok produkcji *</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    min="1950"
-                    max="2025"
-                    {...register('year', { valueAsNumber: true })}
-                  />
+                  <Input id="year" type="number" {...register('year', { valueAsNumber: true })} />
                   {errors.year && <p className="text-sm text-red-500 mt-1">{errors.year.message}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="price">Cena (PLN) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    min="1"
-                    {...register('price', { valueAsNumber: true })}
-                  />
-                  {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price.message}</p>}
-                </div>
-
-                <div>
                   <Label htmlFor="mileage">Przebieg (km) *</Label>
-                  <Input
-                    id="mileage"
-                    type="number"
-                    min="0"
-                    {...register('mileage', { valueAsNumber: true })}
-                  />
+                  <Input id="mileage" type="number" {...register('mileage', { valueAsNumber: true })} />
                   {errors.mileage && <p className="text-sm text-red-500 mt-1">{errors.mileage.message}</p>}
                 </div>
-                <div>
-                  <Label htmlFor="vin">Numer VIN *</Label>
-                  <Input
-                    id="vin"
-                    maxLength={17}
-                    {...register('vin')}
-                    placeholder="17-znakowy numer VIN"
-                  />
-                  {errors.vin && <p className="text-sm text-red-500 mt-1">{errors.vin.message}</p>}
-                </div>
 
-                <div>
-                  <Label htmlFor="power">Moc (KM) *</Label>
-                  <Input
-                    id="power"
-                    type="number"
-                    min="1"
-                    {...register('power', { valueAsNumber: true })}
-                  />
-                  {errors.power && <p className="text-sm text-red-500 mt-1">{errors.power.message}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="displacement">Pojemność (cm³) *</Label>
-                  <Input
-                    id="displacement"
-                    type="number"
-                    min="1"
-                    {...register('displacement', { valueAsNumber: true })}
-                  />
-                  {errors.displacement && <p className="text-sm text-red-500 mt-1">{errors.displacement.message}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="owners">Liczba właścicieli *</Label>
-                  <Input
-                    id="owners"
-                    type="number"
-                    min="1"
-                    max="10"
-                    {...register('owners', { valueAsNumber: true })}
-                  />
-                  {errors.owners && <p className="text-sm text-red-500 mt-1">{errors.owners.message}</p>}
-                </div>
-
-
-                <div>
-                  <Label htmlFor="location">Lokalizacja *</Label>
-                  <Input
-                    id="location"
-                    placeholder="np. Warszawa, Kraków, Gdańsk"
-                    {...register('location')}
-                  />
-                  {errors.location && <p className="text-sm text-red-500 mt-1">{errors.location.message}</p>}
+                <div className="md:col-span-3">
+                  <Label htmlFor="engine">Opis silnika *</Label>
+                  <Input id="engine" {...register('engine')} />
+                  {errors.engine && <p className="text-sm text-red-500 mt-1">{errors.engine.message}</p>}
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Images */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Zdjęcia samochodu</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUpload images={images} onImagesChange={setImages} />
-            </CardContent>
-          </Card>
-
-          {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Opis</CardTitle>
-            </CardHeader>
-            <CardContent>
+              {/* PARAMETRY */}
               <div>
-                <Textarea
-                  placeholder="Opisz stan techniczny, wyposażenie, historię samochodu..."
-                  rows={6}
-                  {...register('description')}
-                />
-                {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>}
+                <h3 className="font-semibold text-zinc-900 mb-3">Parametry</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <Label>Typ paliwa</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('fuelType')}>
+                      <option value="">— wybierz —</option>
+                      {FUEL_TYPES.map((v) => (
+                        <option key={v} value={v}>{v.replace('_',' + ')}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Skrzynia biegów</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('transmission')}>
+                      <option value="">— wybierz —</option>
+                      {TRANSMISSIONS.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Napęd</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('drivetrain')}>
+                      <option value="">— wybierz —</option>
+                      {DRIVETRAINS.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Typ nadwozia</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('bodyType')}>
+                      <option value="">— wybierz —</option>
+                      {BODY_TYPES.map((v) => <option key={v} value={v}>{v.toUpperCase()}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="engineCapacityCcm">Pojemność (ccm)</Label>
+                    <Input id="engineCapacityCcm" type="number" {...register('engineCapacityCcm', { valueAsNumber: true })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="powerKw">Moc (kW)</Label>
+                    <Input id="powerKw" type="number" {...register('powerKw', { valueAsNumber: true })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="color">Kolor</Label>
+                    <Input id="color" {...register('color')} />
+                  </div>
+                  <div>
+                    <Label htmlFor="doors">Drzwi</Label>
+                    <Input id="doors" type="number" {...register('doors', { valueAsNumber: true })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="seats">Miejsca</Label>
+                    <Input id="seats" type="number" {...register('seats', { valueAsNumber: true })} />
+                  </div>
+                  <div>
+                    <Label>Stan techniczny</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('condition')}>
+                      <option value="">— wybierz —</option>
+                      {CONDITIONS.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Kraj pochodzenia</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('origin')}>
+                      <option value="">— wybierz —</option>
+                      {ORIGINS.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Zarejestrowany</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('registeredIn')}>
+                      <option value="">— wybierz —</option>
+                      {REGISTERED_IN.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div className="md:col-span-3">
+                    <Label>Dokument sprzedaży</Label>
+                    <select className="w-full rounded-md border px-3 py-2" {...register('saleDocument')}>
+                      <option value="">— wybierz —</option>
+                      {SALE_DOCS.map((v) => (
+                        <option key={v} value={v}>
+                          {v === 'umowa' ? 'Umowa kupna-sprzedaży' : v === 'vat_marza' ? 'Faktura VAT marża' : 'Faktura VAT 23%'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isSubmitting}
-              className="flex-1 bg-zinc-900 hover:bg-zinc-800"
-            >
-              <Save className="h-5 w-5 mr-2" />
-              Zapisz zmiany
-            </Button>
+              {/* CENA / OPIS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <Label htmlFor="price">Cena (liczba)</Label>
+                  <Input id="price" type="number" {...register('price', { valueAsNumber: true })} />
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="price_text">Cena / opis ceny</Label>
+                  <Input id="price_text" {...register('price_text')} />
+                </div>
+              </div>
 
-            <Button
-              type="button"
-              variant="destructive"
-              size="lg"
-              onClick={handleDelete}
-              className="sm:hidden"
-            >
-              <Trash2 className="h-5 w-5 mr-2" />
-              Usuń ofertę
-            </Button>
-          </div>
-        </form>
+              {/* WYPOSAŻENIE */}
+              <div>
+                <h3 className="font-semibold text-zinc-900 mb-3">Wyposażenie</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {EQUIPMENT_LIST.map((item) => {
+                    const checked = equipment.includes(item.key);
+                    return (
+                      <label key={item.key} className="flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer">
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(c) => {
+                            const next = new Set(equipment);
+                            c ? next.add(item.key) : next.delete(item.key);
+                            setValue('equipment', Array.from(next), { shouldDirty: true });
+                          }}
+                        />
+                        <span>{item.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* OPIS */}
+              <div>
+                <Label htmlFor="description">Opis</Label>
+                <Input id="description" {...register('description')} />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Button type="submit" size="lg" disabled={isSubmitting} className="flex-1 bg-zinc-900 hover:bg-zinc-800">
+                  <Save className="h-5 w-5 mr-2" />
+                  {isSubmitting ? 'Zapisywanie...' : 'Zapisz zmiany'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
