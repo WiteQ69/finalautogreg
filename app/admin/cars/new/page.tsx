@@ -29,6 +29,25 @@ import {
   EQUIPMENT_LIST,
 } from '@/lib/schemas';
 
+// ⬇️ DODANE: rozszerzenie listy wyposażenia dla panelu
+import { EQUIPMENT_LIST_EXTRA } from '@/lib/equipment-extra';
+
+// helper do łączenia bez duplikatów po "key"
+function mergeEquipment<A extends { key: string; label: string }>(
+  base: A[],
+  extra: A[]
+): A[] {
+  const seen = new Set<string>();
+  const out: A[] = [];
+  for (const it of [...base, ...extra]) {
+    if (seen.has(it.key)) continue;
+    seen.add(it.key);
+    out.push(it);
+  }
+  return out;
+}
+const ALL_EQUIPMENT = mergeEquipment(EQUIPMENT_LIST as any, EQUIPMENT_LIST_EXTRA as any);
+
 export default function NewCarPage() {
   const router = useRouter();
   const { addCar } = useCarStore();
@@ -54,7 +73,7 @@ export default function NewCarPage() {
     const urls: string[] = [];
     for (const file of files) {
       const fd = new FormData();
-      fd.append('file', file); // 👈 backend oczekuje klucza 'file'
+      fd.append('file', file); // backend oczekuje klucza 'file'
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -314,7 +333,7 @@ export default function NewCarPage() {
                 <div>
                   <h3 className="font-semibold text-zinc-900 mb-3">Wyposażenie</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    {EQUIPMENT_LIST.map((item) => {
+                    {ALL_EQUIPMENT.map((item) => {
                       const checked = equipment.includes(item.key);
                       return (
                         <label key={item.key} className="flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer">
