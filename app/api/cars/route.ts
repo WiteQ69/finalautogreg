@@ -70,10 +70,7 @@ function toDb(patch: any) {
     'power_kw',
   ]);
 
-  const booleanCols = new Set([
-    'first_owner',
-    'sold_badge',
-  ]);
+  const booleanCols = new Set(['first_owner', 'sold_badge']);
 
   for (const [k, vRaw] of Object.entries(patch || {})) {
     const col = map[k];
@@ -82,25 +79,16 @@ function toDb(patch: any) {
 
     let v: any = vRaw;
 
-    // Try to coerce numbers
     if (numericCols.has(col) && typeof v === 'string') {
       const n = Number(v);
       if (Number.isFinite(n)) v = n;
     }
-
-    // Try to coerce booleans
     if (booleanCols.has(col) && typeof v === 'string') {
       if (v.toLowerCase() === 'true') v = true;
       else if (v.toLowerCase() === 'false') v = false;
     }
-
-    // Parse JSON arrays/objects for images/equipment if they come as strings
     if ((col === 'images' || col === 'equipment') && typeof v === 'string') {
-      try {
-        v = JSON.parse(v);
-      } catch {
-        // leave as-is if not JSON
-      }
+      try { v = JSON.parse(v); } catch {}
     }
 
     out[col] = v;
@@ -114,10 +102,11 @@ async function readBody(req: Request) {
   if (contentType.includes('multipart/form-data')) {
     const form = await req.formData();
     const obj: Record<string, any> = {};
-    for (const [k, v] of form.entries()) {
-      if (typeof v === 'string') obj[k] = v;
-      // Files are ignored in this endpoint; pass URLs via main_image_path/images
-    }
+    // ✅ bez for...of na iteratorze — działa na każdym targetcie
+    form.forEach((value, key) => {
+      if (typeof value === 'string') obj[key] = value;
+      // Plików tu nie obsługujemy – przekazuj URL w main_image_path/images
+    });
     return obj;
   }
   // default: JSON
@@ -147,7 +136,6 @@ export async function POST(req: Request) {
     const incoming = await readBody(req);
     const payload = toDb(incoming);
     const now = new Date().toISOString();
-    // always set timestamps on create
     payload.created_at = payload.created_at ?? now;
     payload.updated_at = now;
 
