@@ -2,7 +2,9 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
-import EquipTile from './EquipTile';
+import { EquipmentGrid } from "@/components/EquipTile"; // UI (client)
+import type { EquipId } from "@/lib/equipment";        // typ ID wyposażenia
+
 import Image from 'next/image';
 import {
   Gauge,
@@ -35,7 +37,6 @@ function pick<T = any>(
     if (k in obj) {
       const v = obj[k];
       if (v !== undefined && v !== null && (typeof v === 'string' ? v.trim() !== '' : true)) return v as T;
-      // jeśli boolean/number 0 -> akceptuj
       if (typeof v === 'boolean' || typeof v === 'number') return v as T;
     }
   }
@@ -94,7 +95,6 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       ? 'Faktura VAT 23%'
       : saleDocumentRaw ?? '-';
 
-  // Normalizacja na potrzeby podpowiedzi PCC
   const saleDocNormalized =
     saleDocumentRaw?.toLowerCase?.().replace(/\s+/g, '_') ?? undefined;
 
@@ -114,10 +114,6 @@ export default async function CarPage({ params }: { params: { id: string } }) {
         }
       : null;
 
-  /* === KLUCZ: ORIGINS / REGISTERED_IN z panelem ===
-     łapiemy uppercase (ORIGINS, REGISTERED_IN), lowercase (origins, registered_in),
-     i ewentualne inne warianty na wszelki wypadek.
-  */
   const importedFrom: string =
     pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ?? '-';
 
@@ -134,54 +130,54 @@ export default async function CarPage({ params }: { params: { id: string } }) {
 
   const videoUrl: string | undefined = (car as any).video_url || undefined;
   const description: string | undefined = (car as any).description ?? undefined;
-  const equipment: string[] = Array.isArray((car as any).equipment)
-    ? (car as any).equipment
-    : [];
+
+  // ⬇️ bierzemy tylko poprawne ID wyposażenia
+  const equipment: EquipId[] = (Array.isArray((car as any).equipment) ? (car as any).equipment : [])
+    .filter(Boolean) as EquipId[];
 
   // Fakty — KOLEJNOŚĆ (zawsze pokazujemy; gdy brak → '-')
   const facts = [
-  {
-    icon: <Cog className="h-5 w-5" />,
-    label: 'Poj. silnika',
-    value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
-  },
-  {
-    icon: <Fuel className="h-5 w-5" />,
-    label: 'Paliwo',
-    value: paliwo ? paliwo.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Bolt className="h-5 w-5" />,
-    label: 'Moc',
-    value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
-  },
-  {
-    icon: <Gauge className="h-5 w-5" />,
-    label: 'Przebieg',
-    value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
-  },
-  {
-    icon: <CarFront className="h-5 w-5" />,
-    label: 'Nadwozie',
-    value: nadwozieRaw ? nadwozieRaw.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Flag className="h-5 w-5" />,
-    label: 'Sprowadzony z',
-    value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <CheckCircle2 className="h-5 w-5" />,
-    label: 'Zarejestrowany',
-    value: registeredText ? registeredText.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Workflow className="h-5 w-5" />,
-    label: 'Dokument sprzedaży',
-    value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
-  },
-];
-
+    {
+      icon: <Cog className="h-5 w-5" />,
+      label: 'Poj. silnika',
+      value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
+    },
+    {
+      icon: <Fuel className="h-5 w-5" />,
+      label: 'Paliwo',
+      value: paliwo ? paliwo.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <Bolt className="h-5 w-5" />,
+      label: 'Moc',
+      value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
+    },
+    {
+      icon: <Gauge className="h-5 w-5" />,
+      label: 'Przebieg',
+      value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
+    },
+    {
+      icon: <CarFront className="h-5 w-5" />,
+      label: 'Nadwozie',
+      value: nadwozieRaw ? nadwozieRaw.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <Flag className="h-5 w-5" />,
+      label: 'Sprowadzony z',
+      value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <CheckCircle2 className="h-5 w-5" />,
+      label: 'Zarejestrowany',
+      value: registeredText ? registeredText.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <Workflow className="h-5 w-5" />,
+      label: 'Dokument sprzedaży',
+      value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -233,46 +229,41 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                 </dl>
               </div>
 
-             {/* REKLAMA */}
-{/* REKLAMA */}
-<div className="rounded-2xl border overflow-hidden">
-  <Image
-    src={AD_SRC}
-    alt="Reklama AUTO GREG"
-    width={1200}
-    height={675}
-    className="w-full h-auto"
-    priority={false}
-  />
-</div>
+              {/* REKLAMA */}
+              <div className="rounded-2xl border overflow-hidden">
+                <Image
+                  src={AD_SRC}
+                  alt="Reklama AUTO GREG"
+                  width={1200}
+                  height={675}
+                  className="w-full h-auto"
+                  priority={false}
+                />
+              </div>
             </div>
           </aside>
         </div>
 
-        {/* Wyposażenie */}
+        {/* Wyposażenie – siatka bez podwójnych ramek */}
         {equipment.length > 0 && (
           <section className="mt-8">
             <h2 className="text-xl font-semibold text-zinc-900 mb-4">
               Wyposażenie
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {equipment.map((code, idx) => (
-                <div key={idx} className="rounded-xl border p-3">
-                  <EquipTile code={code} />
-                </div>
-              ))}
-            </div>
+
+            {/* EquipmentGrid sam renderuje kafelki i układa w grid */}
+            <EquipmentGrid items={equipment} />
           </section>
         )}
 
         {/* Informacje dodatkowe */}
-        {description && (
+        {(car as any).description && (
           <section className="mt-8">
             <h2 className="text-xl font-semibold text-zinc-900 mb-4">
               Informacje dodatkowe
             </h2>
             <div className="rounded-2xl border p-5 text-zinc-800 leading-relaxed whitespace-pre-line">
-              {description}
+              {(car as any).description}
             </div>
           </section>
         )}

@@ -1,23 +1,39 @@
-import Image from "next/image";
+'use client';
 
-type Props = {
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+
+export default function SoldBadge({
+  className,
+  position = 'center',
+}: {
   className?: string;
-};
+  position?: 'center' | 'top-right' | 'top-left';
+}) {
+  const pos =
+    position === 'top-left'
+      ? 'absolute top-3 left-3 rotate-6'
+      : position === 'top-right'
+      ? 'absolute top-3 right-3 -rotate-6'
+      : 'absolute inset-0 flex items-center justify-center';
 
-export default function SoldBadge({ className = "" }: Props) {
   return (
     <div
-      className={`pointer-events-none absolute inset-0 flex items-center justify-center ${className}`}
-      aria-hidden="true"
+      className={cn(
+        'pointer-events-none z-20 drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]',
+        pos,
+        className
+      )}
+      aria-hidden
     >
-      <div className="absolute inset-0 bg-black/15" />
+      {/* obrazek 16:9/duży – jak Twój „sprzedany” */}
       <Image
-        src="/stamps/sold.png"
-        alt="Samochód sprzedany"
-        width={640}
-        height={320}
-        className="w-3/4 max-w-[520px] h-auto drop-shadow-2xl"
-        priority
+        src="/stamps/sold.png"   // <-- wrzuć plik do public/stamps/sold.png
+        alt="SPRZEDANY"
+        width={1200}
+        height={675}
+        className="select-none max-w-full h-auto opacity-95"
+        priority={false}
       />
     </div>
   );

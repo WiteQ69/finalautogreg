@@ -133,7 +133,7 @@ export default function KontaktPage() {
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="123 456 789"
+                        placeholder=""
                         {...register('phone')}
                         className="mt-1"
                       />
