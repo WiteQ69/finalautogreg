@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Car, Star, Shield, Clock, Mail } from 'lucide-react';
+import { ArrowRight, Car, Mail } from 'lucide-react';
 import { HeroSection } from '@/components/ui/hero-section';
 import GoogleReviewsCarousel from '@/components/home/GoogleReviewsCarousel';
-
-
+import FacebookSlideWidget from '@/components/ui/FacebookSlideWidget';
 
 import {
   ClipboardCheck,
@@ -21,55 +20,64 @@ const features = [
   {
     icon: ClipboardCheck,
     title: 'Bezpieczeństwo zakupu',
-    description: 'Każde auto jest dokładnie sprawdzane, żebyś miał pewność, że inwestujesz w solidny samochód.',
+    description:
+      'Każde auto jest dokładnie sprawdzane, żebyś miał pewność, że inwestujesz w solidny samochód.',
   },
   {
     icon: Clock3,
     title: 'Pewne pochodzenie',
-    description: 'Auta pochodzą z zaufanych źródeł, sprawdzone historią serwisową i przebiegiem',
+    description:
+      'Auta pochodzą z zaufanych źródeł, sprawdzone historią serwisową i przebiegiem',
   },
   {
     icon: Users,
     title: 'Auta bez tajemnic',
-    description: 'Wszystkie informacje o aucie są pełne, jasne i otwarte, bez ukrytych niespodzianek. ',
+    description:
+      'Wszystkie informacje o aucie są pełne, jasne i otwarte, bez ukrytych niespodzianek. ',
   },
   {
     icon: FileCheck,
     title: 'Uczciwe dokumenty',
-    description: 'Nie zaniżamy cen na fakturach i nie sprzedajemy „na Niemca”! Otrzymujesz od naszej firmy pełną fakturę VAT MARŻA  – legalnie, jasno i bez niespodzianek w Urzędzie Skarbowym.',
+    description:
+      'Nie zaniżamy cen na fakturach i nie sprzedajemy „na Niemca”! Otrzymujesz od naszej firmy pełną fakturę VAT MARŻA  – legalnie, jasno i bez niespodzianek w Urzędzie Skarbowym.',
   },
   {
     icon: Gauge,
     title: 'Reputacja lokalna',
-    description: 'Jesteśmy firmą lokalną, działamy w okolicy Wadowic i Osieka, więc dbamy o bardzo dobrą opinię wśród klientów, którzy każdego dnia polecają nas swoim znajomym i rodzinie. ',
+    description:
+      'Jesteśmy firmą lokalną, działamy w okolicy Wadowic i Osieka, więc dbamy o bardzo dobrą opinię wśród klientów, którzy każdego dnia polecają nas swoim znajomym i rodzinie. ',
   },
   {
     icon: Wrench,
     title: 'Auta przygotowane do rejestracji',
-    description: 'Otrzymujesz pełny komplet dokumentów, bez żadnych kombinacji, po prostu wsiadasz i jedziesz prosto do wydziału komunikacji.',
+    description:
+      'Otrzymujesz pełny komplet dokumentów, bez żadnych kombinacji, po prostu wsiadasz i jedziesz prosto do wydziału komunikacji.',
   },
   {
     icon: ClipboardCheck,
     title: 'Ubezpieczenie od ręki',
-    description: 'Nie tylko sprzedajemy auta, ale od razu możemy je ubezpieczyć – bez biegania po agentach.',
+    description:
+      'Nie tylko sprzedajemy auta, ale od razu możemy je ubezpieczyć – bez biegania po agentach.',
   },
   {
     icon: Clock3,
     title: 'Komfort psychiczny',
-    description: 'Kupując u nas, nie musisz się martwić, że musisz wymienić olej czy filtry, u nas wszystko masz w cenie – gwarancja spokojnej głowy.',
+    description:
+      'Kupując u nas, nie musisz się martwić, że musisz wymienić olej czy filtry, u nas wszystko masz w cenie – gwarancja spokojnej głowy.',
   },
   {
     icon: Users,
     title: 'Profesjonalizm i doświadczenie',
-    description: 'Dzielimy się wiedzą i doradzamy, abyś wybrał auto idealnie dla siebie, dopasowane do Twoich potrzeb.  ',
+    description:
+      'Dzielimy się wiedzą i doradzamy, abyś wybrał auto idealnie dla siebie, dopasowane do Twoich potrzeb.  ',
   },
   {
     icon: FileCheck,
     title: 'Pewność inwestycji',
-    description: 'Samochód to bardzo ważny zakup, dlatego dbamy, by był dla Ciebie źródłem radości i satysfakcji, a nie problemów.  ',
+    description:
+      'Samochód to bardzo ważny zakup, dlatego dbamy, by był dla Ciebie źródłem radości i satysfakcji, a nie problemów.  ',
   },
 ];
-
 
 export default function HomePage() {
   return (
@@ -78,14 +86,15 @@ export default function HomePage() {
 
       {/* Features Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-  {/* KARUZELA OPINII Z GOOGLE */}
-  <div className="mb-10">
-    <GoogleReviewsCarousel />
-  </div>
+        {/* KARUZELA OPINII Z GOOGLE */}
+        <div className="mb-10">
+          <GoogleReviewsCarousel />
+        </div>
 
-  {/* 10 powodów dlaczego warto ... */}
-  {/* ...Twoja sekcja */}
-</div>
+        {/* 10 powodów dlaczego warto ... */}
+        {/* ...Twoja sekcja */}
+      </div>
+
       <section className="py-20 bg-zinc-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -116,8 +125,12 @@ export default function HomePage() {
                 <div className="inline-flex p-4 rounded-2xl bg-white shadow-sm group-hover:shadow-md transition-shadow duration-300 mb-6">
                   <feature.icon className="h-8 w-8 text-zinc-600" />
                 </div>
-                <h3 className="text-xl font-bold text-zinc-900 mb-3">{feature.title}</h3>
-                <p className="text-zinc-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-bold text-zinc-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-zinc-600 leading-relaxed">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -161,7 +174,9 @@ export default function HomePage() {
                   <div className="p-3 rounded-xl bg-zinc-900">
                     <Car className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-zinc-900">Dostępne auta</h3>
+                  <h3 className="text-2xl font-bold text-zinc-900">
+                    Dostępne auta
+                  </h3>
                 </div>
                 <p className="text-zinc-600 mb-4">
                   Przeglądaj wszystkie nasze samochody - dostępne i sprzedane
@@ -203,6 +218,15 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* WYSUWANY FACEBOOK */}
+      {/* WYSUWANY FACEBOOK */}
+<FacebookSlideWidget
+  pageUrl="https://www.facebook.com/Meta"
+  width={380}
+  height={520}
+/>
+
     </div>
   );
 }

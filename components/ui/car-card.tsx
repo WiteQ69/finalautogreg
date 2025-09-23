@@ -5,16 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Heart,
-  BarChart3,
-  Fuel,
-  Gauge,
-  Car as CarIcon,
-  Cog,
-  CarFront,
-  Flag,
-  Workflow,
-  CheckCircle2,
+    Cog, Fuel, Gauge, CarFront, Flag, Workflow, CheckCircle2,
+  Settings2, Navigation, ShieldCheck, Heart, BarChart3
 } from 'lucide-react';
 import { Car } from '@/types/car';
 import { useCarStore } from '@/store/car-store';
@@ -152,78 +144,117 @@ export function CarCard({ car, index = 0 }: CarCardProps) {
               </div>
             </div>
 
-            {/* Key Specs – KOLEJNOŚĆ wg prośby */}
-            <div className="flex flex-col gap-2 text-xs text-zinc-600">
-              {/* 1. Poj. silnika */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Cog className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{engineCcm ? `${engineCcm} cm³` : '-'}</span>
-              </div>
+          {/* === PARAMETRY – kolejność jak na screenie === */}
+<div className="space-y-3 text-sm text-zinc-800">
 
-              {/* 2. Paliwo */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Fuel className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{getFuelTypeLabel(car.fuelType ?? undefined)}</span>
-              </div>
+  {/* 1. Poj. silnika */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Cog className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.engineCapacityCcm ? `${car.engineCapacityCcm} cm³` : '-'}</span>
+  </div>
 
-              {/* 3. Moc */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Gauge className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>
-                  {powerKm != null
-                    ? `${powerKm} KM`
-                    : powerKw != null
-                    ? `${powerKw} kW`
-                    : '-'}
-                </span>
-              </div>
+  {/* 2. Paliwo */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Fuel className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{getFuelTypeLabel(car.fuelType ?? undefined)}</span>
+  </div>
 
-              {/* 4. Przebieg */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Gauge className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{formatMileage(car.mileage)}</span>
-              </div>
+  {/* 3. Moc (preferujemy kW jak na screenie) */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Gauge className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.powerKw != null ? `${car.powerKw} kW` : '-'}</span>
+  </div>
 
-              {/* 5. Nadwozie */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <CarFront className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{bodyType ?? '-'}</span>
-              </div>
+  {/* 4. Przebieg */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Gauge className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{formatMileage(car.mileage)}</span>
+  </div>
 
-              {/* 6. Skąd sprowadzony */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Flag className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{importedFrom ?? '-'}</span>
-              </div>
+  {/* 5. Skrzynia (pole z panelu: car.transmission) */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Settings2 className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.transmission ?? '-'}</span>
+  </div>
 
-              {/* 7. Dokument sprzedaży */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <Workflow className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{docLabel(saleDocument)}</span>
-              </div>
+  {/* 6. Napęd (pole z panelu: car.drivetrain) */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Navigation className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.drivetrain ?? '-'}</span>
+  </div>
 
-              {/* 8. Zarejestrowany */}
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
-                  <CheckCircle2 className="h-3 w-3 text-zinc-500" />
-                </div>
-                <span>{registeredInPoland === undefined ? '-' : boolLabel(registeredInPoland)}</span>
-              </div>
-            </div>
+  {/* 7. Stan techniczny (pole z panelu: car.condition) */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <ShieldCheck className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.condition ?? '-'}</span>
+  </div>
+
+  {/* 8. Nadwozie */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <CarFront className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.bodyType ?? '-'}</span>
+  </div>
+
+  {/* 9. Zarejestrowany (pole z panelu: car.registeredIn) */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <CheckCircle2 className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>
+      {(() => {
+        // jeśli masz bool w panelu
+        if (typeof car.registeredIn === 'boolean') {
+          return typeof boolLabel === 'function'
+            ? boolLabel(car.registeredIn)
+            : (car.registeredIn ? 'TAK' : 'NIE');
+        }
+        // jeśli wpisujesz tekst (np. "TAK"/"NIE" albo miasto) — pokaż jak jest
+        return car.registeredIn ?? '-';
+      })()}
+    </span>
+  </div>
+
+  {/* 10. Sprowadzony z */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Flag className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.origin ?? '-'}</span>
+  </div>
+
+  {/* 11. Dokument sprzedaży */}
+  <div className="flex items-center gap-2">
+    <div className="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-100">
+      <Workflow className="h-3 w-3 text-zinc-500" />
+    </div>
+    <span>{car.saleDocument ?? '-'}</span>
+  </div>
+
+  {/* 12. Pasek PCC (pokazuj, gdy w panelu wybrałeś fakturę VAT / VAT marża) */}
+  {typeof car.saleDocument === 'string' &&
+    car.saleDocument.toUpperCase().includes('VAT') && (
+      <div className="mt-2 rounded-md bg-emerald-50 text-emerald-700 px-3 py-2 text-[13px] border border-emerald-100">
+        Nie płacisz podatku PCC 2% w urzędzie skarbowym.
+      </div>
+  )}
+</div>
+
 
             {/* Location */}
             <div className="mt-4 pt-4 border-t border-zinc-100">

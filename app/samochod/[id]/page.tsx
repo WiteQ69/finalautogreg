@@ -15,6 +15,9 @@ import {
   Bolt,
   Flag,
   CheckCircle2,
+  ShieldCheck,
+  Settings2,
+  Navigation,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -135,49 +138,75 @@ export default async function CarPage({ params }: { params: { id: string } }) {
   const equipment: EquipId[] = (Array.isArray((car as any).equipment) ? (car as any).equipment : [])
     .filter(Boolean) as EquipId[];
 
+    
   // Fakty — KOLEJNOŚĆ (zawsze pokazujemy; gdy brak → '-')
+const transmission = (car as any).transmission ?? (car as any).gearbox ?? (car as any).skrzynia;
+const drivetrain = (car as any).drivetrain ?? (car as any).drive ?? (car as any).naped;
+const condition = (car as any).condition ?? (car as any).technical_condition ?? (car as any).stan;
+const bodyType = (car as any).bodyType ?? (car as any).body_type ?? nadwozieRaw;
+
+  
   const facts = [
-    {
-      icon: <Cog className="h-5 w-5" />,
-      label: 'Poj. silnika',
-      value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
-    },
-    {
-      icon: <Fuel className="h-5 w-5" />,
-      label: 'Paliwo',
-      value: paliwo ? paliwo.toString().toUpperCase() : '-',
-    },
-    {
-      icon: <Bolt className="h-5 w-5" />,
-      label: 'Moc',
-      value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
-    },
-    {
-      icon: <Gauge className="h-5 w-5" />,
-      label: 'Przebieg',
-      value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
-    },
-    {
-      icon: <CarFront className="h-5 w-5" />,
-      label: 'Nadwozie',
-      value: nadwozieRaw ? nadwozieRaw.toString().toUpperCase() : '-',
-    },
-    {
-      icon: <Flag className="h-5 w-5" />,
-      label: 'Sprowadzony z',
-      value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
-    },
-    {
-      icon: <CheckCircle2 className="h-5 w-5" />,
-      label: 'Zarejestrowany',
-      value: registeredText ? registeredText.toString().toUpperCase() : '-',
-    },
-    {
-      icon: <Workflow className="h-5 w-5" />,
-      label: 'Dokument sprzedaży',
-      value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
-    },
-  ];
+  {
+    icon: <Cog className="h-5 w-5" />,
+    label: 'Poj. silnika',
+    value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
+  },
+  {
+    icon: <Fuel className="h-5 w-5" />,
+    label: 'Paliwo',
+    value: paliwo ? paliwo.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <Bolt className="h-5 w-5" />,
+    label: 'Moc',
+    value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
+  },
+  {
+    icon: <Gauge className="h-5 w-5" />,
+    label: 'Przebieg',
+    value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
+  },
+  // 5. Skrzynia
+  {
+    icon: <Settings2 className="h-5 w-5" />,
+    label: 'Skrzynia',
+    value: transmission ? transmission.toString().toUpperCase() : '-',
+  },
+  // 6. Napęd
+  {
+    icon: <Navigation className="h-5 w-5" />,
+    label: 'Napęd',
+    value: drivetrain ? drivetrain.toString().toUpperCase() : '-',
+  },
+  // 7. Stan techniczny
+  {
+    icon: <ShieldCheck className="h-5 w-5" />,
+    label: 'Stan techniczny',
+    value: condition ? condition.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <CarFront className="h-5 w-5" />,
+    label: 'Nadwozie',
+    value: bodyType ? bodyType.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <CheckCircle2 className="h-5 w-5" />,
+    label: 'Zarejestrowany',
+    value: registeredText ? registeredText.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <Flag className="h-5 w-5" />,
+    label: 'Sprowadzony z',
+    value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
+  },
+  {
+    icon: <Workflow className="h-5 w-5" />,
+    label: 'Dokument sprzedaży',
+    value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
+  },
+];
+
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -229,17 +258,7 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                 </dl>
               </div>
 
-              {/* REKLAMA */}
-              <div className="rounded-2xl border overflow-hidden">
-                <Image
-                  src={AD_SRC}
-                  alt="Reklama AUTO GREG"
-                  width={1200}
-                  height={675}
-                  className="w-full h-auto"
-                  priority={false}
-                />
-              </div>
+              
             </div>
           </aside>
         </div>
