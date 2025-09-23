@@ -12,8 +12,6 @@ const nextConfig = {
       { source: '/sprzedane', destination: '/auta', permanent: true },
     ];
   },
-
-  // ⬇️ DODAJ TO
   async headers() {
     return [
       {
@@ -21,22 +19,21 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            // UWAŻNIE: jeśli masz już CSP gdzie indziej, scal wartości.
-            // Poniżej minimalny CSP zezwalający na iframe FB.
             value: [
               "default-src 'self' https: data: blob:",
-              "img-src 'self' https: data: blob:",
               "style-src 'self' 'unsafe-inline' https:",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-              // najważniejsze — pozwól na ramki z FB
-              "frame-src https://www.facebook.com https://staticxx.facebook.com",
+              // ⚠️ tu dopuszczamy ramki z FB i z Google Maps
+              "frame-src https://www.facebook.com https://staticxx.facebook.com https://www.google.com https://maps.google.com;",
+              // obrazy do map (markery/tiles/avatars)
+              "img-src 'self' https: data: blob: https://maps.gstatic.com https://*.googleusercontent.com https://*.ggpht.com;",
               "connect-src 'self' https:",
               "media-src 'self' https: data:",
-              "frame-ancestors 'self'"
-            ].join('; ')
+              "frame-ancestors 'self'",
+            ].join(' ')
           }
-        ]
-      }
+        ],
+      },
     ];
   },
 };
