@@ -70,15 +70,12 @@ function toDb(patch: any) {
     'power_kw',
   ]);
 
-  const booleanCols = new Set([
-    'first_owner',
-    'sold_badge',
-  ]);
+  const booleanCols = new Set(['first_owner', 'sold_badge']);
 
   for (const [k, vRaw] of Object.entries(patch || {})) {
     const col = map[k];
     if (!col) continue;
-    if (isBlank(vRaw)) continue; // ⬅️ skip blank values entirely
+    if (isBlank(vRaw)) continue;
 
     let v: any = vRaw;
 
@@ -91,7 +88,7 @@ function toDb(patch: any) {
       else if (v.toLowerCase() === 'false') v = false;
     }
     if ((col === 'images' || col === 'equipment') && typeof v === 'string') {
-      try { v = JSON.parse(v); } catch { /* ignore */ }
+      try { v = JSON.parse(v); } catch {}
     }
 
     out[col] = v;
@@ -115,8 +112,6 @@ export async function PUT(req: Request, { params }: Ctx) {
     const patch = await req.json().catch(() => ({}));
     const supabase = getSupabaseServer();
     const payload = toDb(patch);
-
-    // auto-update timestamp
     payload.updated_at = new Date().toISOString();
 
     if (Object.keys(payload).length === 0) {
@@ -139,7 +134,6 @@ export async function PUT(req: Request, { params }: Ctx) {
   }
 }
 
-// allow PATCH as alias of PUT (partial update)
 export async function PATCH(req: Request, ctx: Ctx) {
   return PUT(req, ctx);
 }
@@ -147,7 +141,6 @@ export async function PATCH(req: Request, ctx: Ctx) {
 export async function DELETE(_req: Request, { params }: Ctx) {
   try {
     const supabase = getSupabaseServer();
-    // Return deleted row for convenience
     const { data, error } = await supabase
       .from('cars')
       .delete()
