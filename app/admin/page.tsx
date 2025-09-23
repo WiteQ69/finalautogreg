@@ -1,191 +1,252 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Car, Plus, BarChart3, Users, TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useCarStore } from '@/store/car-store';
+import { useEffect, useMemo, useState } from 'react';
+
+// Prosty formatter PLN
+const fmtPLN = (n: number) =>
+  n.toLocaleString('pl-PL', {
+    style: 'currency',
+    currency: 'PLN',
+    maximumFractionDigits: 0,
+  });
+
+type CarRow = {
+  id: string;
+  title?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  price_text?: string | null;
+  status?: string | null;
+  purchasePricePLN?: number | null;
+  purchase_price_pln?: number | null;
+  salePricePLN?: number | null;
+  sale_price_pln?: number | null;
+};
 
 export default function AdminDashboard() {
-  const { cars, setCars } = useCarStore();
+  const [cars, setCars] = useState<CarRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadCars = async () => {
-      try {
-        const response = await fetch('/cars.json');
-        const data = await response.json();
-        setCars(data);
-      } catch (error) {
-        console.error('Error loading cars:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCars();
-  }, [setCars]);
-
-  const stats = {
-    total: cars.length,
-    active: cars.filter(car => car.status === 'active').length,
-    sold: cars.filter(car => car.status === 'sold').length,
-    totalValue: cars
-      .filter(car => car.status === 'active')
-      .reduce((sum, car) => {
-        if (car.price_text) {
-          const price = parseInt(car.price_text.replace(/[^\d]/g, ''));
-          return sum + (isNaN(price) ? 0 : price);
-        }
-        return sum;
-      }, 0),
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/cars', { cache: 'no-store' });
+      if (!res.ok) throw new Error(await res.text());
+      const data: any[] = await res.json();
+      setCars(
+        (Array.isArray(data) ? data : []).map((c) => ({
+          ...c,
+          purchasePricePLN:
+            c.purchasePricePLN ?? c.purchase_price_pln ?? null,
+          salePricePLN: c.salePricePLN ?? c.sale_price_pln ?? null,
+        }))
+      );
+    } catch (e: any) {
+      setError(e?.message || 'Nie udało się pobrać aut.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 p-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-zinc-200 rounded mb-8 max-w-md"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-zinc-200 rounded-lg h-32"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    load();
+  }, []);
+
+  const savePrices = async (id: string, purchase: string, sale: string) => {
+    try {
+      setSavingId(id);
+      setError(null);
+      const purchaseVal =
+        purchase === '' || purchase == null
+          ? null
+          : Number(String(purchase).replace(/\s/g, ''));
+      const saleVal =
+        sale === '' || sale == null
+          ? null
+          : Number(String(sale).replace(/\s/g, ''));
+
+      if (
+        (purchaseVal !== null && !Number.isFinite(purchaseVal)) ||
+        (saleVal !== null && !Number.isFinite(saleVal))
+      ) {
+        throw new Error('Wpisz liczby (PLN).');
+      }
+
+      const res = await fetch(`/api/cars/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          purchasePricePLN: purchaseVal,
+          salePricePLN: saleVal,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+
+      setCars((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                purchasePricePLN: purchaseVal,
+                purchase_price_pln: purchaseVal,
+                salePricePLN: saleVal,
+                sale_price_pln: saleVal,
+              }
+            : c
+        )
+      );
+    } catch (e: any) {
+      setError(e?.message || 'Nie udało się zapisać.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const totals = useMemo(() => {
+    let purchase = 0;
+    let sale = 0;
+    cars.forEach((c) => {
+      const p =
+        (c.purchasePricePLN ?? c.purchase_price_pln) as number | null;
+      const s = (c.salePricePLN ?? c.sale_price_pln) as number | null;
+      if (typeof p === 'number') purchase += p;
+      if (typeof s === 'number') sale += s;
+    });
+    return { purchase, sale, profit: sale - purchase };
+  }, [cars]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-4xl font-bold text-zinc-900 mb-2 tracking-tight">
-                Panel Administracyjny
-              </h1>
-              <p className="text-xl text-zinc-600">Zarządzaj swoimi samochodami</p>
-            </div>
-            
-            <Button asChild size="lg" className="bg-zinc-900 hover:bg-zinc-800">
-              <Link href="/admin/cars" className="flex items-center space-x-2">
-                <Plus className="h-5 w-5" />
-                <span>Dodaj auto</span>
-              </Link>
-            </Button>
-          </div>
-        </motion.div>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold text-zinc-900 mb-6">
+        Panel Administracyjny
+      </h1>
 
-        {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
-        >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Wszystkie auta</CardTitle>
-              <Car className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">
-                w bazie danych
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Dostępne</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-              <p className="text-xs text-muted-foreground">
-                aktywnych ofert
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sprzedane</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.sold}</div>
-              <p className="text-xs text-muted-foreground">
-                sprzedanych aut
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Wartość</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalValue.toLocaleString('pl-PL')} zł</div>
-              <p className="text-xs text-muted-foreground">
-                dostępnych aut
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <Card className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader>
-              <CardTitle>Zarządzaj samochodami</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-zinc-600 mb-4">
-                Przeglądaj, edytuj i usuwaj samochody z bazy danych
-              </p>
-              <Button asChild className="w-full">
-                <Link href="/auta">
-                  <Car className="h-4 w-4 mr-2" />
-                  Zobacz wszystkie auta
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader>
-              <CardTitle>Dodaj nowe auto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-zinc-600 mb-4">
-                Utwórz nową ofertę samochodu w systemie
-              </p>
-              <Button asChild className="w-full bg-zinc-900 hover:bg-zinc-800">
-                <Link href="/admin/cars">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Dodaj auto
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* Podsumowanie */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="rounded-xl border p-4">
+          <p className="text-sm text-zinc-500">Włożyłem w auta</p>
+          <p className="text-2xl font-semibold mt-1">
+            {fmtPLN(totals.purchase)}
+          </p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-sm text-zinc-500">Mam w autach</p>
+          <p className="text-2xl font-semibold mt-1">
+            {fmtPLN(totals.sale)}
+          </p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="text-sm text-zinc-500">Różnica (zarobek)</p>
+          <p
+            className={`text-2xl font-semibold mt-1 ${
+              totals.profit >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {fmtPLN(totals.profit)}
+          </p>
+        </div>
       </div>
+
+      {error && (
+        <div className="mb-4 text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <p>Ładowanie...</p>
+      ) : (
+        <div className="space-y-6">
+          {cars.map((c) => (
+            <div
+              key={c.id}
+              className="rounded-xl border p-4 shadow-sm bg-white"
+            >
+              <h2 className="text-lg font-semibold text-zinc-900 mb-2">
+                {c.title || `${c.brand || ''} ${c.model || ''}`}{' '}
+                {c.year ? `(${c.year})` : ''}
+              </h2>
+              <p className="text-sm text-zinc-500 mb-4">
+                {c.price_text || ''}
+              </p>
+
+              {/* Pola cena zakupu / sprzedaży */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-zinc-600 mb-1">
+                    Cena zakupu (PLN)
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue={
+                      c.purchasePricePLN ?? c.purchase_price_pln ?? ''
+                    }
+                    onChange={(e) =>
+                      setCars((prev) =>
+                        prev.map((cc) =>
+                          cc.id === c.id
+                            ? {
+                                ...cc,
+                                purchasePricePLN: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              }
+                            : cc
+                        )
+                      )
+                    }
+                    className="w-full border rounded-md p-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-zinc-600 mb-1">
+                    Cena sprzedaży (PLN)
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue={
+                      c.salePricePLN ?? c.sale_price_pln ?? ''
+                    }
+                    onChange={(e) =>
+                      setCars((prev) =>
+                        prev.map((cc) =>
+                          cc.id === c.id
+                            ? {
+                                ...cc,
+                                salePricePLN: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              }
+                            : cc
+                        )
+                      )
+                    }
+                    className="w-full border rounded-md p-2 text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                disabled={savingId === c.id}
+                onClick={() =>
+                  savePrices(
+                    c.id,
+                    String(c.purchasePricePLN ?? ''),
+                    String(c.salePricePLN ?? '')
+                  )
+                }
+                className="mt-4 px-4 py-2 rounded-md bg-zinc-900 text-white hover:bg-zinc-800 text-sm"
+              >
+                {savingId === c.id ? 'Zapisywanie...' : 'Zapisz'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

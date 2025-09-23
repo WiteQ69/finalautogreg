@@ -1,5 +1,6 @@
 // app/samochod/[id]/page.tsx
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
 import { EquipmentGrid } from "@/components/EquipTile"; // UI (client)
@@ -29,6 +30,10 @@ const supabase = createClient(
 );
 
 const AD_SRC = '/REKLAMA2.jpg';
+
+// absolutny URL Twojej strony (ustaw w Vercel: NEXT_PUBLIC_SITE_URL=https://paczynski.pl)
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://paczynski.pl';
+const abs = (u: string) => (u?.startsWith('http') ? u : `${SITE_URL}${u || ''}`);
 
 /* ---------- helpers ---------- */
 function pick<T = any>(
@@ -60,6 +65,87 @@ function boolToTakNie(v: any): string {
   return '-';
 }
 /* ----------------------------- */
+
+/* ===== Open Graph / Twitter Cards dla udostępniania ===== */
+async function getCarForMeta(id: string) {
+  const { data } = await supabase.from('cars').select('*').eq('id', id).single();
+  return data || null;
+}
+
+export async function generateMetadata(
+  { params }: { params: { id: string } }
+): Promise<Metadata> {
+  const car = await getCarForMeta(params.id);
+
+  const title =
+    (car as any)?.title
+      ? `${(car as any).title} • AUTO GREG`
+      : 'AUTO GREG – Ogłoszenie';
+
+  // opisz auto z dostępnych pól
+  const engineCapacityCcm =
+    num((car as any)?.engineCapacityCcm) ??
+    num((car as any)?.engine_capacity_ccm) ??
+    num((car as any)?.engine_capacity);
+
+  const powerKwNum =
+    num((car as any)?.powerKw) ??
+    num((car as any)?.power_kw);
+
+  const mileageNum = num((car as any)?.mileage);
+  const paliwo: string | undefined =
+    (car as any)?.fuelType ?? (car as any)?.fuel_type;
+
+  const parts = [
+    engineCapacityCcm && `${engineCapacityCcm} cm³`,
+    powerKwNum && `${powerKwNum} kW`,
+    paliwo,
+    mileageNum && `${mileageNum.toLocaleString('pl-PL')} km`,
+  ].filter(Boolean) as string[];
+
+  const description =
+    parts.length > 0
+      ? parts.join(' • ')
+      : 'Pewne auta, jasna historia. Wadowice / Osiek.';
+
+  // pierwsze zdjęcie z galerii / główne / fallback logo
+  const primaryImg =
+    (Array.isArray((car as any)?.images) && (car as any).images[0]) ||
+    (car as any)?.main_image_path ||
+    '/logo10.jpg';
+
+  const imageUrl = abs(primaryImg);
+  const url = `${SITE_URL}/samochod/${params.id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      siteName: 'AUTO GREG',
+      locale: 'pl_PL',
+      url,
+      title,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+/* ======================================================== */
 
 export default async function CarPage({ params }: { params: { id: string } }) {
   const { data: car, error } = await supabase
@@ -118,10 +204,10 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       : null;
 
   const importedFrom: string =
-    pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ?? '-';
+    pick<string>(car as any, ['ORIGINS', 'origins', 'Origins', 'origin', 'country', 'kraj'], '-') ?? '-' ;
 
   const registeredText: string =
-    pick<string>(car as any, ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'], '-') ?? '-';
+    pick<string>(car as any, ['REGISTERED_IN', 'registered_in', 'Registered_In', 'registered', 'zarejestrowany'], '-') ?? '-' ;
 
   // Media / opis / wyposażenie
   const images: string[] =
@@ -138,75 +224,72 @@ export default async function CarPage({ params }: { params: { id: string } }) {
   const equipment: EquipId[] = (Array.isArray((car as any).equipment) ? (car as any).equipment : [])
     .filter(Boolean) as EquipId[];
 
-    
   // Fakty — KOLEJNOŚĆ (zawsze pokazujemy; gdy brak → '-')
-const transmission = (car as any).transmission ?? (car as any).gearbox ?? (car as any).skrzynia;
-const drivetrain = (car as any).drivetrain ?? (car as any).drive ?? (car as any).naped;
-const condition = (car as any).condition ?? (car as any).technical_condition ?? (car as any).stan;
-const bodyType = (car as any).bodyType ?? (car as any).body_type ?? nadwozieRaw;
+  const transmission = (car as any).transmission ?? (car as any).gearbox ?? (car as any).skrzynia;
+  const drivetrain   = (car as any).drivetrain ?? (car as any).drive   ?? (car as any).naped;
+  const condition    = (car as any).condition  ?? (car as any).technical_condition ?? (car as any).stan;
+  const bodyType     = (car as any).bodyType   ?? (car as any).body_type ?? nadwozieRaw;
 
-  
   const facts = [
-  {
-    icon: <Cog className="h-5 w-5" />,
-    label: 'Poj. silnika',
-    value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
-  },
-  {
-    icon: <Fuel className="h-5 w-5" />,
-    label: 'Paliwo',
-    value: paliwo ? paliwo.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Bolt className="h-5 w-5" />,
-    label: 'Moc',
-    value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
-  },
-  {
-    icon: <Gauge className="h-5 w-5" />,
-    label: 'Przebieg',
-    value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
-  },
-  // 5. Skrzynia
-  {
-    icon: <Settings2 className="h-5 w-5" />,
-    label: 'Skrzynia',
-    value: transmission ? transmission.toString().toUpperCase() : '-',
-  },
-  // 6. Napęd
-  {
-    icon: <Navigation className="h-5 w-5" />,
-    label: 'Napęd',
-    value: drivetrain ? drivetrain.toString().toUpperCase() : '-',
-  },
-  // 7. Stan techniczny
-  {
-    icon: <ShieldCheck className="h-5 w-5" />,
-    label: 'Stan techniczny',
-    value: condition ? condition.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <CarFront className="h-5 w-5" />,
-    label: 'Nadwozie',
-    value: bodyType ? bodyType.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <CheckCircle2 className="h-5 w-5" />,
-    label: 'Zarejestrowany',
-    value: registeredText ? registeredText.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Flag className="h-5 w-5" />,
-    label: 'Sprowadzony z',
-    value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
-  },
-  {
-    icon: <Workflow className="h-5 w-5" />,
-    label: 'Dokument sprzedaży',
-    value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
-  },
-];
-
+    {
+      icon: <Cog className="h-5 w-5" />,
+      label: 'Poj. silnika',
+      value: engineCapacityCcm !== undefined ? `${engineCapacityCcm} cm³` : '-',
+    },
+    {
+      icon: <Fuel className="h-5 w-5" />,
+      label: 'Paliwo',
+      value: paliwo ? paliwo.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <Bolt className="h-5 w-5" />,
+      label: 'Moc',
+      value: powerKwNum !== undefined ? `${powerKwNum} kW` : '-',
+    },
+    {
+      icon: <Gauge className="h-5 w-5" />,
+      label: 'Przebieg',
+      value: mileageNum !== undefined ? `${mileageNum.toLocaleString('pl-PL')} km` : '-',
+    },
+    // 5. Skrzynia
+    {
+      icon: <Settings2 className="h-5 w-5" />,
+      label: 'Skrzynia',
+      value: transmission ? transmission.toString().toUpperCase() : '-',
+    },
+    // 6. Napęd
+    {
+      icon: <Navigation className="h-5 w-5" />,
+      label: 'Napęd',
+      value: drivetrain ? drivetrain.toString().toUpperCase() : '-',
+    },
+    // 7. Stan techniczny
+    {
+      icon: <ShieldCheck className="h-5 w-5" />,
+      label: 'Stan techniczny',
+      value: condition ? condition.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <CarFront className="h-5 w-5" />,
+      label: 'Nadwozie',
+      value: bodyType ? bodyType.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <CheckCircle2 className="h-5 w-5" />,
+      label: 'Zarejestrowany',
+      value: registeredText ? registeredText.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <Flag className="h-5 w-5" />,
+      label: 'Sprowadzony z',
+      value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
+    },
+    {
+      icon: <Workflow className="h-5 w-5" />,
+      label: 'Dokument sprzedaży',
+      value: saleDocumentText ? saleDocumentText.toString().toUpperCase() : '-',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-white pt-6">
@@ -257,8 +340,6 @@ const bodyType = (car as any).bodyType ?? (car as any).body_type ?? nadwozieRaw;
                   ))}
                 </dl>
               </div>
-
-              
             </div>
           </aside>
         </div>
