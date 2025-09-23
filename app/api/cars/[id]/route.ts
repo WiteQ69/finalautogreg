@@ -49,7 +49,7 @@ function toDb(patch: any) {
     updated_at: 'updated_at',
     sold_badge: 'sold_badge',
     soldBadge: 'sold_badge',
-description: 'description',
+    description: 'description',
 
     // camelCase -> snake_case
     engineCapacityCcm: 'engine_capacity_ccm',
@@ -61,10 +61,39 @@ description: 'description',
     firstOwner: 'first_owner',
   };
 
-  for (const [k, v] of Object.entries(patch || {})) {
+  const numericCols = new Set([
+    'year',
+    'mileage',
+    'doors',
+    'seats',
+    'engine_capacity_ccm',
+    'power_kw',
+  ]);
+
+  const booleanCols = new Set([
+    'first_owner',
+    'sold_badge',
+  ]);
+
+  for (const [k, vRaw] of Object.entries(patch || {})) {
     const col = map[k];
     if (!col) continue;
-    if (isBlank(v)) continue; // ⬅️ skip blank values entirely
+    if (isBlank(vRaw)) continue; // ⬅️ skip blank values entirely
+
+    let v: any = vRaw;
+
+    if (numericCols.has(col) && typeof v === 'string') {
+      const n = Number(v);
+      if (Number.isFinite(n)) v = n;
+    }
+    if (booleanCols.has(col) && typeof v === 'string') {
+      if (v.toLowerCase() === 'true') v = true;
+      else if (v.toLowerCase() === 'false') v = false;
+    }
+    if ((col === 'images' || col === 'equipment') && typeof v === 'string') {
+      try { v = JSON.parse(v); } catch { /* ignore */ }
+    }
+
     out[col] = v;
   }
   return out;
@@ -83,11 +112,13 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function PUT(req: Request, { params }: Ctx) {
   try {
-    const patch = await req.json();
+    const patch = await req.json().catch(() => ({}));
     const supabase = getSupabaseServer();
     const payload = toDb(patch);
 
-    // ⬇️ No-op: jeśli nic nie zostało do zaktualizowania, zwróć bieżący rekord (200)
+    // auto-update timestamp
+    payload.updated_at = new Date().toISOString();
+
     if (Object.keys(payload).length === 0) {
       const { data, error } = await supabase.from('cars').select('*').eq('id', params.id).single();
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -103,6 +134,29 @@ export async function PUT(req: Request, { params }: Ctx) {
 
     if (error) return NextResponse.json({ error: error.message, details: error.details }, { status: 400 });
     return NextResponse.json(data);
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? String(e) }, { status: 500 });
+  }
+}
+
+// allow PATCH as alias of PUT (partial update)
+export async function PATCH(req: Request, ctx: Ctx) {
+  return PUT(req, ctx);
+}
+
+export async function DELETE(_req: Request, { params }: Ctx) {
+  try {
+    const supabase = getSupabaseServer();
+    // Return deleted row for convenience
+    const { data, error } = await supabase
+      .from('cars')
+      .delete()
+      .eq('id', params.id)
+      .select('*')
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message, details: error.details }, { status: 400 });
+    return NextResponse.json({ ok: true, deleted: data });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? String(e) }, { status: 500 });
   }
