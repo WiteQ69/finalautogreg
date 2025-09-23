@@ -222,7 +222,7 @@ export default function HomePage() {
       {/* WYSUWANY FACEBOOK */}
       {/* WYSUWANY FACEBOOK */}
 <FacebookSlideWidget
-  pageUrl="https://www.facebook.com/Meta"
+  pageUrl="https://www.facebook.com/autopaczynski"
   width={380}
   height={520}
 />
