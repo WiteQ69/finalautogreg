@@ -64,6 +64,55 @@ function boolToTakNie(v: any): string {
   }
   return '-';
 }
+// --- Kody krajów -> ISO2 dla flagcdn.com ---
+const countryIso: Record<string, { code: string; label: string }> = {
+  POLSKA:   { code: 'pl', label: 'Polska' },
+  NIEMCY:   { code: 'de', label: 'Niemcy' },
+  FRANCJA:  { code: 'fr', label: 'Francja' },
+  WŁOCHY:   { code: 'it', label: 'Włochy' },
+  HISZPANIA:{ code: 'es', label: 'Hiszpania' },
+  HOLANDIA: { code: 'nl', label: 'Holandia' },
+  BELGIA:   { code: 'be', label: 'Belgia' },
+  SZWECJA:  { code: 'se', label: 'Szwecja' },
+  NORWEGIA: { code: 'no', label: 'Norwegia' },
+  DANIA:    { code: 'dk', label: 'Dania' },
+  CZECHY:   { code: 'cz', label: 'Czechy' },
+  SŁOWACJA: { code: 'sk', label: 'Słowacja' },
+  AUSTRIA:  { code: 'at', label: 'Austria' },
+  SZWAJCARIA:{ code: 'ch', label: 'Szwajcaria' },
+  USA:      { code: 'us', label: 'USA' },
+  UK:       { code: 'gb', label: 'Wielka Brytania' },
+};
+
+// ładny label + flaga (ReactNode)
+function renderCountryWithFlag(raw?: string) {
+  if (!raw) return '-';
+  const key = raw.trim().toUpperCase();
+  const item = countryIso[key];
+  const label =
+    raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+
+  if (!item) return label;
+
+  const src = `https://flagcdn.com/24x18/${item.code}.png`; // mała, lekka flaga
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      {/* zwykłe <img>, bez Next/Image (prościej, brak whitelisty) */}
+      <img
+        src={src}
+        width={24}
+        height={18}
+        alt={item.label}
+        className="inline-block rounded-[2px] border border-zinc-200"
+        loading="lazy"
+      />
+      <span>{item.label}</span>
+    </span>
+  );
+}
+
+
 /* ----------------------------- */
 
 /* ===== Open Graph / Twitter Cards dla udostępniania ===== */
@@ -280,10 +329,13 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       value: registeredText ? registeredText.toString().toUpperCase() : '-',
     },
     {
-      icon: <Flag className="h-5 w-5" />,
-      label: 'Sprowadzony z',
-      value: importedFrom ? importedFrom.toString().toUpperCase() : '-',
-    },
+  icon: <Flag className="h-5 w-5" />,
+  label: 'Sprowadzony z',
+  value: renderCountryWithFlag(importedFrom as any),
+},
+
+
+
     {
       icon: <Workflow className="h-5 w-5" />,
       label: 'Dokument sprzedaży',
