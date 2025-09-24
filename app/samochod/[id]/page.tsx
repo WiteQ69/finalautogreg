@@ -410,7 +410,7 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                {/* Obserwuj nas na Facebooku */}
 <div className="mt-6 flex justify-end justify-center">
     <a
-      href="https://www.facebook.com/twoja-strona"
+      href="https://www.facebook.com/autopaczynski"
       target="_blank"
       rel="noopener noreferrer"
     >
