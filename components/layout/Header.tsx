@@ -3,11 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Car } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from "next/image";
-
-
+import { useState } from 'react';
 
 const navigation = [
   { name: 'STRONA GŁÓWNA', href: '/' },
@@ -19,6 +18,7 @@ const navigation = [
 
 export function Header() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   return (
     <motion.header
@@ -28,20 +28,19 @@ export function Header() {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-         {/* Logo */}
-<Link href="/" className="flex items-center" aria-label="AUTO GREG — paczynski.pl">
-  <Image
-    src="/autogreg-logo.png"       // plik w public/
-    alt="AUTO GREG GRZEGORZ PACZYŃSKI"
-    width={270}                    // ustaw rozmiar jak chcesz
-    height={46}                    // proporcja zbliżona do oryginału
-    className="h-13 w-left"         // h-8 / h-10 zależnie od paska
-    priority
-  />
-</Link>
+          {/* Logo */}
+          <Link href="/" className="flex items-center" aria-label="AUTO GREG — paczynski.pl">
+            <Image
+              src="/autogreg-logo.png"
+              alt="AUTO GREG GRZEGORZ PACZYŃSKI"
+              width={270}
+              height={46}
+              className="h-13 w-left"
+              priority
+            />
+          </Link>
 
-
-          {/* Navigation */}
+          {/* Navigation (desktop) */}
           <nav className="hidden md:flex items-center space-x-1">
             {navigation.map((item) => (
               <Link
@@ -59,9 +58,39 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Actions */}
-          <div className="flex items-center space-x-2"></div>
+          {/* Hamburger (mobile) */}
+          <button
+            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-md border hover:bg-zinc-50"
+            onClick={() => setOpen(!open)}
+            aria-label="Menu"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {/* Mobile menu */}
+        {open && (
+          <div className="md:hidden pb-4">
+            <ul className="flex flex-col gap-2 rounded-lg border p-3 text-sm bg-white shadow-md">
+              {navigation.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'block rounded-md px-3 py-2 hover:bg-zinc-50',
+                      pathname === item.href
+                        ? 'bg-zinc-900 text-white hover:bg-zinc-800'
+                        : 'text-zinc-700 hover:text-zinc-900'
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </motion.header>
   );
