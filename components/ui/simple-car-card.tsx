@@ -7,7 +7,8 @@ import type { Car } from '@/types/car';
 import SoldBadge from '@/components/SoldBadge';
 // Jeśli chcesz też REZERWACJA, odkomentuj i użyj:
 // import StatusStamp from '@/components/StatusStamp';
-
+import StatusStamp from '@/components/StatusStamp';
+import ReservationBadge from '@/components/ReservationBadge';
 function km(n?: number | string) {
   const v =
     typeof n === 'number'
@@ -75,26 +76,26 @@ export function SimpleCarCard({
             priority={index < 3}
           />
 
-          {/* STEMPL SPRZEDANY */}
-      {Boolean(car?.sold_badge) && (
+        {/* Nakładki: REZERWACJA ma pierwszeństwo przed SPRZEDANY */}
+{Boolean((car as any)?.reserved_badge) ? (
+  <ReservationBadge
+    position="center"
+    className="absolute top-1/2 left-1/2 w-[52%] md:w-[48%] lg:w-[46%] opacity-95 -translate-x-1/2 -translate-y-1/2"
+  />
+) : Boolean((car as any)?.sold_badge) ? (
   <SoldBadge
     position="center"
-    className="
-      w-[52%] md:w-[48%] lg:w-[46%] opacity-95
-      translate-x-6 md:translate-x-8
-      lg:translate-x-[calc(0.01rem+3cm)]
-    "
+    className="absolute top-1/2 left-1/2 w-[52%] md:w-[48%] lg:w-[46%] opacity-95 -translate-x-1/2 -translate-y-1/2"
   />
-)}
+) : null}
+
+
+</div>
 
 
 
 
-          {/* REZERWACJA (opcjonalnie) */}
-          {/* {car.reserved_badge && (
-            <StatusStamp status="reserved" className="w-2/3 md:w-3/4 opacity-90" position="center" />
-          )} */}
-        </div>
+         
 
         <div className="p-4">
           <h3 className="text-lg font-extrabold tracking-tight text-zinc-900">

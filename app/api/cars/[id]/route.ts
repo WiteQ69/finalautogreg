@@ -50,6 +50,8 @@ function toDb(patch: any) {
     sold_badge: 'sold_badge',
     soldBadge: 'sold_badge',
     description: 'description',
+reserved_badge: 'reserved_badge',
+reservedBadge: 'reserved_badge',
 
     // camelCase -> snake_case
     engineCapacityCcm: 'engine_capacity_ccm',
@@ -70,7 +72,7 @@ function toDb(patch: any) {
     'power_kw',
   ]);
 
-  const booleanCols = new Set(['first_owner', 'sold_badge']);
+const booleanCols = new Set(['first_owner', 'sold_badge', 'reserved_badge']);
 
   for (const [k, vRaw] of Object.entries(patch || {})) {
     const col = map[k];

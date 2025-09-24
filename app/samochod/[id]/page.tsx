@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import Gallery from './Gallery';
 import { EquipmentGrid } from "@/components/EquipTile"; // UI (client)
 import type { EquipId } from "@/lib/equipment";        // typ ID wyposażenia
+import StatusStamp from '@/components/StatusStamp';
+import ReservationBadge from '@/components/ReservationBadge';
 
 import Image from 'next/image';
 import {
@@ -20,6 +22,7 @@ import {
   Settings2,
   Navigation,
 } from 'lucide-react';
+import SoldBadge from '@/components/SoldBadge';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -348,9 +351,11 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Galeria */}
-          <div className="lg:col-span-8">
-            <Gallery images={images} videoUrl={videoUrl} />
-          </div>
+<div className="lg:col-span-8 relative">
+  <Gallery images={images} videoUrl={videoUrl} />
+</div>
+
+
 
           {/* Prawa kolumna */}
           <aside className="lg:col-span-4">

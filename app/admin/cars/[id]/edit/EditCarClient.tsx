@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Save, ArrowLeft, Trash2, CheckCircle2, Undo2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import ReservedBadgeToggle from '@/components/admin/ReservedBadgeToggle';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -528,6 +529,18 @@ export default function EditCarClient({ id }: Props) {
                     }}
                   />
                 </div>
+                {/* STEMPL „ZAREZERWOWANY” – ręczny przełącznik */}
+<div className="rounded-lg border p-4">
+  <h3 className="font-semibold text-zinc-900 mb-2">Nakładka „ZAREZERWOWANY” na zdjęciu</h3>
+  <ReservedBadgeToggle
+    carId={String(car.id)}
+    initial={!!(car as any).reserved_badge}
+    onChanged={(val) => {
+      try { updateCar(id, { reserved_badge: val } as any); } catch {}
+    }}
+  />
+</div>
+
 
                 {/* Aktualne zdjęcia */}
                 {Array.isArray(car.images) && car.images.length > 0 && (

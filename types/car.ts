@@ -63,6 +63,8 @@ export type Car = {
   registeredIn?: RegisteredIn;
   saleDocument?: SaleDocument;
    sold_badge?: boolean | null;
+   reserved_badge?: boolean | null;
+
    
 
   // sprzedaż / status / cena
