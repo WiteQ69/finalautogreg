@@ -7,6 +7,9 @@ import { EquipmentGrid } from "@/components/EquipTile"; // UI (client)
 import type { EquipId } from "@/lib/equipment";        // typ ID wyposażenia
 import StatusStamp from '@/components/StatusStamp';
 import ReservationBadge from '@/components/ReservationBadge';
+import Flag1 from '@/components/Flag1';
+import CountryFlag from '@/components/CountryFlag';
+import { Flag as FlagIcon } from 'lucide-react';
 
 import Image from 'next/image';
 import {
@@ -331,11 +334,16 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       label: 'Zarejestrowany',
       value: registeredText ? registeredText.toString().toUpperCase() : '-',
     },
-    {
-  icon: <Flag className="h-5 w-5" />,
-  label: 'Sprowadzony z',
-  value: renderCountryWithFlag(importedFrom as any),
-},
+   {
+    icon: <FlagIcon className="h-5 w-5" />,     // opcjonalnie zostawikonkę
+    label: 'Sprowadzony z',
+    value: (
+      <span className="inline-flex items-center gap-2">
+        <CountryFlag country={importedFrom} />
+        <span>{importedFrom ?? '—'}</span>
+      </span>
+    ),
+  },
 
 
 
@@ -395,9 +403,28 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                       )}
                     </div>
                   ))}
+                  
                 </dl>
+                
               </div>
+               {/* Obserwuj nas na Facebooku */}
+<div className="mt-6 flex justify-end justify-center">
+    <a
+      href="https://www.facebook.com/twoja-strona"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Image
+        src="/OBSERWUJ.png"
+        alt="Obserwuj nas na Facebooku"
+        width={350}
+        height={100}
+        className="hover:opacity-90 transition"
+      />
+    </a>
+  </div>
             </div>
+
           </aside>
         </div>
 
