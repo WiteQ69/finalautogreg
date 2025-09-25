@@ -29,7 +29,7 @@ export default function FacebookFloat({
   // Składamy adres do pluginu FB
   const pageHref = encodeURIComponent(url);
   const pluginSrc =
-    `https://www.facebook.com/plugins/page.php?` +
+    `https://www.facebook.com/autopaczynski` +
     `href=${pageHref}&tabs=timeline&width=${width}&height=${height}` +
     `&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true`;
 
