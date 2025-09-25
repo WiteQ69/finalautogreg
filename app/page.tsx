@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Car, Mail } from 'lucide-react';
 import { HeroSection } from '@/components/ui/hero-section';
 import GoogleReviewsCarousel from '@/components/home/GoogleReviewsCarousel';
-import FacebookSlideWidget from '@/components/ui/FacebookSlideWidget';
+import dynamic from 'next/dynamic';
 
 import {
   ClipboardCheck,
@@ -15,6 +15,12 @@ import {
   Gauge,
   Wrench,
 } from 'lucide-react';
+
+// ⬇️ dynamiczny import, żeby SDK FB ładował się tylko w przeglądarce
+const FacebookSlideWidget = dynamic(
+  () => import('@/components/ui/FacebookSlideWidget'),
+  { ssr: false }
+);
 
 const features = [
   {
@@ -220,13 +226,14 @@ export default function HomePage() {
       </section>
 
       {/* WYSUWANY FACEBOOK */}
-      {/* WYSUWANY FACEBOOK */}
-<FacebookSlideWidget
-  pageUrl="https://www.facebook.com/autopaczynski"
-  width={380}
-  height={520}
-/>
-
+      <FacebookSlideWidget
+        pageUrl="https://www.facebook.com/autopaczynski"
+        width={380}
+        height={520}
+        // locale="pl_PL"
+        // side="right"
+        // buttonLabel="Zobacz posty na Facebooku"
+      />
     </div>
   );
 }

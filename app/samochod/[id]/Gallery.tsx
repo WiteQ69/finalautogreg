@@ -157,19 +157,21 @@ export default function Gallery({ images, videoUrl }: Props) {
 
       {/* miniatury */}
       {items.length > 1 && (
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-7 gap-3">
           {items.slice(0, 10).map((src, i) => {
             const active = i === index;
             const asVideo = isVideo(src);
             return asVideo ? (
               <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`h-16 w-full rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs ${active ? 'ring-2 ring-zinc-900' : ''}`}
-                title="Wideo"
-              >
-                <Play className="h-4 w-4 mr-1" /> Wideo
-              </button>
+  key={i}
+  onClick={() => goTo(i)}
+  className={`h-24 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-xs ${
+    active ? 'ring-2 ring-zinc-900' : ''
+  }`}
+  title="Wideo"
+>
+  <Play className="h-4 w-4 mr-1" /> Wideo
+</button>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img

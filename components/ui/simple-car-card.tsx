@@ -30,16 +30,23 @@ export function SimpleCarCard({
 
   const year = car.year ?? car['YEAR'] ?? '';
   const mileageText = km(car.mileage ?? car['MILEAGE']);
-  const engine = car.engine ?? '';
-  const fuel = (car.fuelType ?? car.fuel_type ?? '') as string;
+const engine = car.engine ?? '';
+const fuel = (car.fuelType ?? car.fuel_type ?? '') as string;
 
-  const specs = [
-    year && String(year),
-    mileageText && `${mileageText} km`,
-    [engine, fuel].filter(Boolean).join(' '),
-  ]
-    .filter(Boolean)
-    .join(' • ');
+// usuń duplikat paliwa jeśli już jest w engine
+const engineFuel =
+  engine.toLowerCase().includes(fuel.toLowerCase())
+    ? engine
+    : [engine, fuel].filter(Boolean).join(' ');
+
+const specs = [
+  year && String(year),
+  mileageText && `${mileageText} km`,
+  engineFuel,
+]
+  .filter(Boolean)
+  .join(' • ');
+
 
   const priceLine =
     (car.price_text && String(car.price_text).trim()) ||

@@ -335,15 +335,16 @@ export default async function CarPage({ params }: { params: { id: string } }) {
       value: registeredText ? registeredText.toString().toUpperCase() : '-',
     },
    {
-    icon: <FlagIcon className="h-5 w-5" />,     // opcjonalnie zostawikonkę
-    label: 'Sprowadzony z',
-    value: (
-      <span className="inline-flex items-center gap-2">
-        <CountryFlag country={importedFrom} />
-        <span>{importedFrom ?? '—'}</span>
-      </span>
-    ),
-  },
+  icon: <FlagIcon className="h-5 w-5" />, // opcjonalnie zostaw ikonę
+  label: 'Sprowadzony z',
+  value: (
+    <span className="inline-flex items-center gap-2">
+      <CountryFlag country={importedFrom} />
+      <span>{importedFrom ? importedFrom.toUpperCase() : '—'}</span>
+    </span>
+  ),
+},
+
 
 
 
