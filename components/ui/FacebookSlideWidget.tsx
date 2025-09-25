@@ -75,7 +75,7 @@ export default function FacebookSlideWidget({
         aria-hidden={!open}
       >
         <iframe
-          src={`https://www.facebook.com/autopaczynski`}
+          src={`https://www.facebook.com/plugins/page.php?href=${encoded}&tabs=timeline&width=${width}&height=${height}&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&appId`}
           width={width}
           height={height}
           style={{ border: 'none', overflow: 'hidden' }}

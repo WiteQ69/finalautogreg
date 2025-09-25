@@ -28,7 +28,7 @@ export default function FacebookPageEmbed({
     return encodeURIComponent(url);
   }, [pageUrl]);
 
-  const src = `https://www.facebook.com/autopaczynski`;
+  const src = `https://www.facebook.com/plugins/page.php?href=${href}&tabs=${tabs}&width=500&height=${height}&small_header=${smallHeader ? 'true' : 'false'}&adapt_container_width=true&hide_cover=${hideCover ? 'true' : 'false'}&show_facepile=${showFacepile ? 'true' : 'false'}`;
 
   return (
     <div className="w-full">
