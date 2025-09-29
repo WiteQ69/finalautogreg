@@ -9,6 +9,9 @@ import AdminLayoutWrapper from '@/components/layout/AdminLayoutWrapper';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  /* ✅ DODANE: absolutna baza do OG (FB/Messenger) */
+  metadataBase: new URL('https://paczynski.pl'),
+
   title: 'AUTO GREG GRZEGORZ PACZYŃSKI WADOWICE OSIEK',
   description:
     'Sprowadzamy i sprzedajemy samochody z zagranicy. Działamy w okolicy Wadowic i Osieka — pewne auta, jasna historia, pomoc przy formalnościach.',
