@@ -379,9 +379,10 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                   {(car as any).engine ? ` • ${(car as any).engine}` : ''}
                 </p>
                 {(car as any).price_text && (
-                  <div className="text-1xl font-semibold mt-4">
-                    {(car as any).price_text}
-                  </div>
+                  <div className="mt-4 inline-block px-3 py-1 text-lg font-bold text-white bg-blue-500 rounded-lg">
+  {(car as any).price_text}
+</div>
+
                 )}
               </div>
 
