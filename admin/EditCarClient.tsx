@@ -303,7 +303,7 @@ export default function EditCarClient({ id }: Props) {
 
               {/* CENA  */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1>
+                <div className="md:col-span-2">
                   <Label htmlFor="price_text">Cena / opis ceny</Label>
                   <Input id="price_text" placeholder="np. 189 000 PLN lub 'Cena do uzgodnienia'" {...register('price_text')} />
                 </div>
