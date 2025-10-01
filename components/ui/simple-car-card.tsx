@@ -113,9 +113,9 @@ const specs = [
             <p className="mt-1 text-sm text-zinc-600">{specs.toUpperCase()}</p>
           )}
 
-          <p className="mt-3 text-sm font-semibold text-zinc-800">
-            {priceLine}
-          </p>
+          <p className="mt-3 inline-block px-2 py-1 text-lg font-bold text-white bg-blue-500 rounded-lg">
+  {priceLine}
+</p>
         </div>
       </Link>
     </motion.article>
