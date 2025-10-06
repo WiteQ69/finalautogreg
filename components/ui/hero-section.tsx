@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowRight, Plus, Search } from 'lucide-react';
+import { ArrowRight, Mail, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function HeroSection() {
@@ -45,13 +45,23 @@ export function HeroSection() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Button asChild size="lg" className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-4 h-auto">
-                    <Link href="/auta" className="flex items-center space-x-2">
-                      <Search className="h-5 w-5" />
-                      <span className="font-medium">Przeglądaj samochody</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
+                 <div className="flex items-center space-x-4">
+  <Button asChild size="lg" className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-4 h-auto">
+    <Link href="/auta" className="flex items-center space-x-2">
+      <Search className="h-5 w-5" />
+      <span className="font-medium">Przeglądaj samochody</span>
+      <ArrowRight className="h-4 w-4" />
+    </Link>
+  </Button>
+
+  <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 h-auto">
+    <Link href="/newsletter" className="flex items-center space-x-2">
+      <Mail className="h-5 w-5" />
+      <span className="font-medium">Zapisz się do newslettera</span>
+      <ArrowRight className="h-4 w-4" />
+    </Link>
+  </Button>
+</div>
                 </motion.div>
 
                 <motion.div

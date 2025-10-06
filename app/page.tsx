@@ -17,10 +17,13 @@ import {
 } from 'lucide-react';
 
 // ⬇️ dynamiczny import, żeby SDK FB ładował się tylko w przeglądarce
-const FacebookSlideWidget = dynamic(
-  () => import('@/components/ui/FacebookSlideWidget'),
-  { ssr: false }
-);
+// ⬇️ były
+const FacebookSlideWidget = dynamic(() => import('@/components/ui/FacebookSlideWidget'), { ssr: false });
+
+// ⬇️ dodaj
+const InstagramSlideWidget = dynamic(() => import('@/components/ui/InstagramSlideWidget'), { ssr: false });
+const TikTokSlideWidget    = dynamic(() => import('@/components/ui/TikTokSlideWidget'),    { ssr: false });
+
 
 const features = [
   {
@@ -230,6 +233,20 @@ export default function HomePage() {
         pageUrl="https://www.facebook.com/autopaczynski"
         width={380}
         height={520}
+        // locale="pl_PL"
+        // side="right"
+        // buttonLabel="Zobacz posty na Facebooku"
+      />
+       <TikTokSlideWidget
+        pageUrl="https://www.tiktok.com/@autopaczynski"
+        
+        // locale="pl_PL"
+        // side="right"
+        // buttonLabel="Zobacz posty na Facebooku"
+      />
+       <InstagramSlideWidget
+        pageUrl="https://www.instagram.com/autopaczynski/"
+       
         // locale="pl_PL"
         // side="right"
         // buttonLabel="Zobacz posty na Facebooku"

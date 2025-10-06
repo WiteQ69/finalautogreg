@@ -14,6 +14,7 @@ const navigation = [
   { name: 'GWARANCJE', href: '/gwarancje' },
   { name: 'UBEZPIECZENIA', href: 'https://www.ubezpieczeniaosiek.pl/' },
   { name: 'KONTAKT', href: '/kontakt' },
+  { name: 'NEWSLETTER', href: '/newsletter' },
 ];
 
 export function Header() {

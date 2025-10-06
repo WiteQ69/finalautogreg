@@ -131,6 +131,33 @@ export default function NewCarPage() {
 
       const saved = await res.json();
       addCar(saved);
+
+    // --- [NEWSLETTER] powiadom subskrybentów o nowym aucie (bez blokowania UX) ---
+try {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const link = saved?.slug ? `${origin}/auta/${saved.slug}` : `${origin}/auta`;
+
+  const r = await fetch(`${origin}/api/newsletter/announce`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: newCar.title,
+      price_text: newCar.price_text || null,
+      imageUrl: newCar.images?.[0] || null,
+      link,
+    }),
+    keepalive: true,
+  });
+
+  // tymczasowe logi, żeby zobaczyć co się dzieje
+  const txt = await r.text();
+  console.log('[announce] status:', r.status, 'body:', txt);
+} catch (e) {
+  console.warn('Newsletter notify failed (non-blocking):', e);
+}
+// --- [END NEWSLETTER] ---
+
+
       router.push('/admin/cars');
     } catch (error) {
       console.error('Error adding car:', error);
