@@ -6,7 +6,7 @@ type Props = {
 };
 
 export default function TikTokSlideWidget({
-  pageUrl = 'https://www.tiktok.com/@autopaczynski',
+  pageUrl = 'https://www.tiktok.com/@autogregpaczynski',
 }: Props) {
   return (
     <>
