@@ -65,7 +65,7 @@ export function HeroSection() {
   >
     <Link href="/newsletter" className="flex items-center space-x-2">
       <Mail className="h-5 w-5" />
-      <span className="font-medium">Zapisz się do newslettera</span>
+      <span className="font-medium">Powiadamiaj mnie o nowych samochodach</span>
       <ArrowRight className="h-4 w-4" />
     </Link>
   </Button>
