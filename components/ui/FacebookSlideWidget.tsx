@@ -1,78 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useMemo } from 'react';
+import SocialSlidePanel from './SocialSlidePanel';
 
 type Props = {
-  /** pełny adres strony na FB */
   pageUrl?: string;
-  /** szerokość wysuwanego panelu (iframe) */
   width?: number;
-  /** wysokość wysuwanego panelu (iframe) */
   height?: number;
+  offsetPx?: number; // przesunięcie w pionie (px)
 };
 
-/**
- * Wysuwany widżet Facebook (jak na starej stronie):
- * - po prawej „ucho” w kolorze FB
- * - na hover/najechaniu wysuwa się panel z ostatnimi postami (timeline)
- * - czysty <iframe>, zero SDK/parse – więc nie ma białych pustych bloków
- */
 export default function FacebookSlideWidget({
-  pageUrl = 'https://www.facebook.com/autogreg',
-  width = 340,
-  height = 331,
+  pageUrl = 'https://www.facebook.com/autopaczynski',
+  width = 380,
+  height = 520,
+  offsetPx = 0,
 }: Props) {
-  const [open, setOpen] = useState(false);
-  const encoded = encodeURIComponent(pageUrl);
+  const encoded = useMemo(() => encodeURIComponent(pageUrl), [pageUrl]);
 
   return (
     <>
-      {/* UCHO */}
-      <div
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        className="
-          fixed z-[1000]
-          top-[35%] right-0
-          h-[100px] w-[60px]
-          flex items-center justify-center
-          rounded-l-md
-          bg-[#1877F2] text-white
-          cursor-pointer select-none
-          shadow-lg
-          md:flex
-          hidden
-        "
-        aria-label="Facebook"
-      >
-        {/* obrazek/napis obrócony jak u Ciebie */}
-        <div className="flex items-center justify-center -rotate-90">
-          <span className="font-semibold tracking-wide">Facebook</span>
-        </div>
-      </div>
-
-      {/* PANEL Z IFRAME (ostatnie posty) */}
-      <div
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        className="
-          fixed z-[999]
-          top-1/2
-          hidden md:block
-        "
-        style={{
-          right: open ? 0 : -width,
-          transform: 'translateY(-50%)',
-          width,
-          height,
-          transition: 'right 0.3s ease',
-          borderRadius: '12px 0 0 12px',
-          overflow: 'hidden',
-          boxShadow:
-            '0 10px 30px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.1)',
-          background: '#fff',
-        }}
-        aria-hidden={!open}
+      <SocialSlidePanel
+        label="Facebook"
+        tabText="Facebook"
+        colorClass="bg-[#1877F2]"
+        width={width}
+        height={height}
+        offsetPx={offsetPx}
       >
         <iframe
           src={`https://www.facebook.com/plugins/page.php?href=${encoded}&tabs=timeline&width=${width}&height=${height}&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&appId`}
@@ -80,23 +34,19 @@ export default function FacebookSlideWidget({
           height={height}
           style={{ border: 'none', overflow: 'hidden' }}
           scrolling="no"
-          frameBorder="0"
+          frameBorder={0}
           allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
           allowFullScreen
           title="Facebook timeline"
         />
-      </div>
+      </SocialSlidePanel>
 
-      {/* Mobile: pokaż tylko pływający przycisk otwierający FB */}
+      {/* Mobile – pływający przycisk */}
       <a
         href={pageUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="
-          md:hidden fixed right-3 bottom-3
-          rounded-full p-3 shadow-xl bg-[#1877F2] text-white
-          z-[1000]
-        "
+        className="md:hidden fixed right-3 bottom-3 rounded-full p-3 shadow-xl bg-[#1877F2] text-white z-[1000]"
         aria-label="Otwórz Facebook"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

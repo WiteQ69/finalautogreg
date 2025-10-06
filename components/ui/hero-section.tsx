@@ -45,8 +45,12 @@ export function HeroSection() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                 <div className="flex items-center space-x-4">
-  <Button asChild size="lg" className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-4 h-auto">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0">
+  <Button
+    asChild
+    size="lg"
+    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-4 h-auto"
+  >
     <Link href="/auta" className="flex items-center space-x-2">
       <Search className="h-5 w-5" />
       <span className="font-medium">Przeglądaj samochody</span>
@@ -54,7 +58,11 @@ export function HeroSection() {
     </Link>
   </Button>
 
-  <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 h-auto">
+  <Button
+    asChild
+    size="lg"
+    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 h-auto"
+  >
     <Link href="/newsletter" className="flex items-center space-x-2">
       <Mail className="h-5 w-5" />
       <span className="font-medium">Zapisz się do newslettera</span>
@@ -62,6 +70,7 @@ export function HeroSection() {
     </Link>
   </Button>
 </div>
+
                 </motion.div>
 
                 <motion.div

@@ -227,30 +227,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <FacebookSlideWidget pageUrl="https://www.facebook.com/autopaczynski" width={380} height={520} />
+      <InstagramSlideWidget pageUrl="https://www.instagram.com/autopaczynski/" width={380} height={520} />
+      <TikTokSlideWidget pageUrl="https://www.tiktok.com/@autopaczynski" width={380} height={520} />
 
-      {/* WYSUWANY FACEBOOK */}
-      <FacebookSlideWidget
-        pageUrl="https://www.facebook.com/autopaczynski"
-        width={380}
-        height={520}
-        // locale="pl_PL"
-        // side="right"
-        // buttonLabel="Zobacz posty na Facebooku"
-      />
-       <TikTokSlideWidget
-        pageUrl="https://www.tiktok.com/@autopaczynski"
-        
-        // locale="pl_PL"
-        // side="right"
-        // buttonLabel="Zobacz posty na Facebooku"
-      />
-       <InstagramSlideWidget
-        pageUrl="https://www.instagram.com/autopaczynski/"
-       
-        // locale="pl_PL"
-        // side="right"
-        // buttonLabel="Zobacz posty na Facebooku"
-      />
     </div>
   );
 }
