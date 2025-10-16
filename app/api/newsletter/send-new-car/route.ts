@@ -6,15 +6,16 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function emailHtml({
-  title, priceText, imageUrl, link, unsubscribeToken,
+  title, /* priceText, */ imageUrl, link, unsubscribeToken,
 }: {
   title: string;
-  priceText?: string;
+  // priceText?: string; // celowo niewykorzystywane
   imageUrl?: string;
   link: string;
   unsubscribeToken?: string;
 }) {
-  const price = priceText ? ` – ${priceText}` : '';
+  // cena wyłączona
+  const price = ''; // zostawiam zmienną, ale pusta
   const img = imageUrl
     ? `
       <tr>
@@ -94,8 +95,6 @@ function emailHtml({
   </table>`;
 }
 
-
-
 export async function POST(req: Request) {
   try {
     // autoryzacja – musi odpowiadać temu co wysyła /announce
@@ -104,7 +103,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, price_text, imageUrl, link } = await req.json();
+    const { title, /* price_text, */ imageUrl, link } = await req.json();
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -130,12 +129,13 @@ export async function POST(req: Request) {
     }
     if (!subs?.length) return NextResponse.json({ ok: true, sent: 0, message: 'Brak subskrybentów' });
 
-    const subject = `Nowość: ${title}${price_text ? ' – ' + price_text : ''}`;
+    // Temat BEZ ceny
+    const subject = `Nowość: ${title}`;
 
     for (const s of subs) {
       const html = emailHtml({
         title,
-        priceText: price_text || undefined,
+        // priceText: undefined, // nie wysyłamy ceny
         imageUrl: imageUrl || undefined,
         link,
         unsubscribeToken: s.unsubscribe_token,
