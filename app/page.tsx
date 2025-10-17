@@ -228,7 +228,7 @@ export default function HomePage() {
         </div>
       </section>
       <FacebookSlideWidget pageUrl="https://www.facebook.com/autopaczynski" />
-      <InstagramSlideWidget pageUrl="https://www.instagram.com/autopaczynski/" />
+      <InstagramSlideWidget pageUrl="https://www.instagram.com/autogregpaczynski/" />
       <TikTokSlideWidget pageUrl="https://www.tiktok.com/@autogregpaczynski" />
 
     </div>
