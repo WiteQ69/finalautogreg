@@ -1,0 +1,17 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")       // pooled
+  directUrl = env("POSTGRES_URL_NON_POOLING")  // direct
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Car {
+  id                 String   @id
+  purchase_price_pln Int?
+  sale_price_pln     Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

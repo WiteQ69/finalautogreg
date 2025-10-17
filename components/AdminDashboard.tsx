@@ -3,9 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
-const fmtPLN = (n: number) =>
-  n.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 });
-
 type Car = {
   id: string;
   title?: string | null;
@@ -14,15 +11,18 @@ type Car = {
   year?: number | null;
   price_text?: string | null;
   status?: string | null;
-  // ADMIN ONLY (pobieramy z Twojego starego API)
+  // pola z API (snake_case)
   purchase_price_pln?: number | string | null;
   sale_price_pln?: number | string | null;
-  // lokalny stan (liczby)
+  // lokalny stan jako liczby
   purchasePricePLN?: number | null;
   salePricePLN?: number | null;
 };
 
-export default function AdminDashboard() {
+const fmtPLN = (n: number) =>
+  n.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 });
+
+export default function AdminPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -32,23 +32,25 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      // ⬅️ ZOSTAJE: Twój istniejący endpoint, który zwraca wszystkie auta
-const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const data: any[] = await res.json();
+
+      // NOWA ŚCIEŻKA: /api/admin/cars
+      const res = await fetch('/api/admin/cars', { cache: 'no-store' });
+      const data = (await res.json()) as any[];
       if (!res.ok) throw new Error((data as any)?.error || 'Błąd pobierania');
 
-      setCars(
-        (Array.isArray(data) ? data : []).map((c: any) => ({
-          ...c,
-          purchasePricePLN:
-            c.purchase_price_pln == null || c.purchase_price_pln === ''
-              ? null
-              : Number(c.purchase_price_pln),
-          salePricePLN:
-            c.sale_price_pln == null || c.sale_price_pln === ''
-              ? null
-              : Number(c.sale_price_pln),
-        }))
-      );
+      const mapped = (Array.isArray(data) ? data : []).map((c) => ({
+        ...c,
+        purchasePricePLN:
+          c.purchase_price_pln == null || c.purchase_price_pln === ''
+            ? null
+            : Number(c.purchase_price_pln),
+        salePricePLN:
+          c.sale_price_pln == null || c.sale_price_pln === ''
+            ? null
+            : Number(c.sale_price_pln),
+      })) as Car[];
+
+      setCars(mapped);
     } catch (e: any) {
       setError(e?.message || 'Nie udało się pobrać aut.');
     } finally {
@@ -81,30 +83,22 @@ const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const d
       setError(null);
 
       const body = {
-        // wysyłamy snake_case jak w DB
         purchase_price_pln: car.purchasePricePLN ?? null,
         sale_price_pln: car.salePricePLN ?? null,
       };
 
-      // ⬅️ ZMIANA: zapis idzie do /admin/data/cars/[id]
-      const res = await fetch(`/admin/data/cars/${id}`, {
+      // NOWA ŚCIEŻKA: /api/admin/cars/[id]
+      const res = await fetch(`/api/admin/cars/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
         body: JSON.stringify(body),
       });
 
-      const text = await res.text();
-      let data: any;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error(`PATCH /admin/data/cars/${id} nie zwrócił JSON (${res.status}): ${text.slice(0,160)}…`);
-      }
-
+      const data = (await res.json().catch(() => ({}))) as any;
       if (!res.ok) throw new Error(data?.error || 'Błąd zapisu');
 
-      // OPTYMISTYCZNIE podmień rekord lokalnie (albo możesz zrobić await load(); jeśli wolisz)
+      // OPTYMISTYCZNIE podmieniamy rekord na bazie odpowiedzi
       setCars((prev) =>
         prev.map((c) =>
           c.id === id
@@ -115,7 +109,9 @@ const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const d
                 sale_price_pln:
                   data?.sale_price_pln ?? body.sale_price_pln ?? c.sale_price_pln,
                 purchasePricePLN:
-                  data?.purchase_price_pln == null ? null : Number(data.purchase_price_pln),
+                  data?.purchase_price_pln == null
+                    ? null
+                    : Number(data.purchase_price_pln),
                 salePricePLN:
                   data?.sale_price_pln == null ? null : Number(data.sale_price_pln),
               }
@@ -123,8 +119,7 @@ const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const d
         )
       );
 
-      // Jeśli chcesz 100% zgodności z backendem po F5 – odkomentuj:
-      // await load();
+      // WAŻNE: nie robimy tu load(); żeby nie nadpisać świeżo wpisanych wartości
     } catch (e: any) {
       setError(e?.message || 'Nie udało się zapisać.');
     } finally {
@@ -146,13 +141,19 @@ const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const d
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-zinc-900 mb-6">Panel Administracyjny</h1>
 
-      <div>
+      <div className="mb-4">
         <Link
           href="/admin/subscribers"
           className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 hover:bg-gray-50"
         >
           📬 Otwórz listę subskrybentów
         </Link>
+        <button
+          onClick={load}
+          className="ml-3 inline-flex items-center gap-2 rounded-xl border px-4 py-2 hover:bg-gray-50"
+        >
+          🔄 Odśwież
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -166,7 +167,11 @@ const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const d
         </div>
         <div className="rounded-xl border p-4">
           <p className="text-sm text-zinc-500">Różnica (zarobek)</p>
-          <p className={`text-2xl font-semibold mt-1 ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <p
+            className={`text-2xl font-semibold mt-1 ${
+              totals.profit >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
             {fmtPLN(totals.profit)}
           </p>
         </div>
@@ -185,7 +190,8 @@ const res = await fetch('/admin/data/cars', { cache: 'no-store' });      const d
           {cars.map((c) => (
             <div key={c.id} className="rounded-xl border p-4 shadow-sm bg-white">
               <h2 className="text-lg font-semibold text-zinc-900 mb-2">
-                {c.title || `${c.brand || ''} ${c.model || ''}`}{c.year ? ` (${c.year})` : ''}
+                {c.title || `${c.brand || ''} ${c.model || ''}`}
+                {c.year ? ` (${c.year})` : ''}
               </h2>
               {c.price_text && <p className="text-sm text-zinc-500 mb-4">{c.price_text}</p>}
 
