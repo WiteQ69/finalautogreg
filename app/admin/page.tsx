@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/dist/client/link';
 import { useEffect, useMemo, useState } from 'react';
 
 const fmtPLN = (n: number) =>
@@ -119,6 +120,14 @@ export default function AdminDashboard() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-zinc-900 mb-6">Panel Administracyjny</h1>
+<div>
+  <Link
+    href="/admin/subscribers"
+    className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 hover:bg-gray-50"
+  >
+    📬 Otwórz listę subskrybentów
+  </Link>
+</div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="rounded-xl border p-4">
@@ -135,6 +144,7 @@ export default function AdminDashboard() {
             {fmtPLN(totals.profit)}
           </p>
         </div>
+        
       </div>
 
       {error && <div className="mb-4 text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">{error}</div>}
