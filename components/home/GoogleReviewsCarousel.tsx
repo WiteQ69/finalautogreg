@@ -29,6 +29,29 @@ const AVATAR_FALLBACK =
 const normalizeAvatar = (u?: string) =>
   !u ? AVATAR_FALLBACK : u.startsWith('http') ? u : `https:${u}`;
 
+// === KONFIG: blocklista autorów (lowercase) ===
+const BLOCKED_AUTHORS = new Set<string>(['sroka']);
+
+// === KONFIG: prosta heurystyka anty-spam ===
+// ukrywamy bardzo krótkie „bez dowodów” 1-gwiazdkowe oraz typowe frazy
+const SHOULD_HIDE = (r: GReview) => {
+  const rating = r.rating ?? 0;
+  const text = (r.text ?? '').trim();
+  const name = (r.author_name ?? '').toLowerCase().trim();
+
+  // twarda blocklista
+  if (BLOCKED_AUTHORS.has(name)) return true;
+
+  // 1★ i bardzo krótki opis -> ukryj
+  if (rating <= 1 && text.length < 30) return true;
+
+  // krótkie ogólniki bez szczegółów (rozszerz listę wg potrzeb)
+  const genericBad = /^(nie polecam|oszustwo|oszust|scam|fraud)$/i;
+  if (rating <= 2 && text.length < 50 && genericBad.test(text)) return true;
+
+  return false;
+};
+
 function Stars({ value }: { value: number }) {
   const v = Math.round(value ?? 0);
   return (
@@ -45,7 +68,7 @@ function Stars({ value }: { value: number }) {
 
 export default function GoogleReviewsCarousel({
   autoPlayMs = 6000,
-  title  = 'OPINIE KLIENTÓW Z GOOGLE',
+  title = 'OPINIE KLIENTÓW Z GOOGLE',
 }: {
   autoPlayMs?: number;
   title?: string;
@@ -71,13 +94,17 @@ export default function GoogleReviewsCarousel({
     };
   }, []);
 
-  const reviews = useMemo(() => data?.reviews?.filter(r => !!r.text) ?? [], [data]);
+  // FILTR: tekst + blocklista + heurystyka
+  const reviews = useMemo(() => {
+    const raw = data?.reviews ?? [];
+    return raw.filter((r) => !!r.text && !SHOULD_HIDE(r));
+  }, [data]);
 
   // autoplay – przesuwamy indeks co autoPlayMs
   useEffect(() => {
     if (reviews.length <= 1 || autoPlayMs <= 0) return;
     const t = setInterval(() => {
-      setIdx(prev => (prev + 1) % reviews.length);
+      setIdx((prev) => (prev + 1) % reviews.length);
     }, autoPlayMs);
     return () => clearInterval(t);
   }, [reviews.length, autoPlayMs]);
@@ -111,24 +138,25 @@ export default function GoogleReviewsCarousel({
     );
   }
 
-  
-
-  // Fallback when API returns error or no reviews
+  // Fallback gdy API zwraca error lub zero opinii
   const hasError = data && !data.ok;
-  const noData = !loading && (!data || (data.ok && (!data.reviews || data.reviews.length === 0)));
+  const noData =
+    !loading && (!data || (data.ok && (!data.reviews || data.reviews.length === 0)));
 
   if (hasError || noData) {
     return (
       <section className="rounded-2xl border bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold mb-2">{title ?? 'Opinie Google'}</h2>
         <p className="text-sm text-zinc-600">
-          {hasError ? 'Nie udało się pobrać opinii. Upewnij się, że na produkcji w Vercel masz ustawione zmienne środowiskowe GOOGLE_PLACES_API_KEY i GOOGLE_PLACE_ID.' : 'Brak opinii do wyświetlenia.'}
+          {hasError
+            ? 'Nie udało się pobrać opinii. Upewnij się, że na produkcji w Vercel masz ustawione zmienne środowiskowe GOOGLE_PLACES_API_KEY i GOOGLE_PLACE_ID.'
+            : 'Brak opinii do wyświetlenia.'}
         </p>
       </section>
     );
   }
 
-return (
+  return (
     <section className="w-full">
       {/* Nagłówek bez tła/ramek */}
       <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-6">{title}</h3>
@@ -136,25 +164,28 @@ return (
       {/* DWA kafelki, bez tła sekcji, bez krawędzi kontenera */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {pair.map((rv, i) => (
-          <Card
-            key={i}
-            className="rounded-2xl border bg-white/90 shadow-sm transition"
-          >
+          <Card key={i} className="rounded-2xl border bg-white/90 shadow-sm transition">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src={normalizeAvatar(rv.profile_photo_url)}
                   alt={rv.author_name}
                   referrerPolicy="no-referrer"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = AVATAR_FALLBACK; }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = AVATAR_FALLBACK;
+                  }}
                   loading="lazy"
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div className="min-w-0">
-                  <div className="font-semibold text-zinc-900 truncate">{rv.author_name}</div>
+                  <div className="font-semibold text-zinc-900 truncate">
+                    {rv.author_name}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Stars value={rv.rating} />
-                    <span className="text-xs text-zinc-500">{rv.relative_time_description}</span>
+                    <span className="text-xs text-zinc-500">
+                      {rv.relative_time_description}
+                    </span>
                   </div>
                 </div>
               </div>
