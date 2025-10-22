@@ -1,53 +1,102 @@
-// middleware.ts
-import { NextResponse, NextRequest } from 'next/server';
+// middleware.ts (Edge Runtime)
+import { NextResponse, NextRequest } from 'next/server'
 
-const ENV_USER = process.env.ADMIN_USER;
-const ENV_PASS = process.env.ADMIN_PASS;
+const ENV_USER = process.env.ADMIN_USER || ''
+const ENV_PASS = process.env.ADMIN_PASS || ''
 
-// Fallback - użyty TYLKO jeśli env-y nie są ustawione
-const USER = ENV_USER && ENV_USER.length ? ENV_USER : 'admin';
-const PASS = ENV_PASS && ENV_PASS.length ? ENV_PASS : 'Mojafirma2015!@!';
+// ——— USTAW TO W VERCEL ENV! ———
+// W produkcji NIE używaj fallbacków:
+const USER = ENV_USER
+const PASS = ENV_PASS
 
 function unauthorized(reason?: string) {
-  // UWAGA: reason dodajemy jako nagłówek tylko lokalnie, żeby debugować
   const headers: Record<string, string> = {
     'WWW-Authenticate': 'Basic realm="Admin Area"',
     'Cache-Control': 'no-store',
-  };
+  }
   if (process.env.NODE_ENV !== 'production' && reason) {
-    headers['x-auth-debug'] = reason;
+    headers['x-auth-debug'] = reason
   }
-  return new NextResponse('Auth required.', { status: 401, headers });
+  return new NextResponse('Auth required.', { status: 401, headers })
 }
 
-export function middleware(req: NextRequest) {
-  // chronimy /admin i wszystko pod nim
-  if (!req.nextUrl.pathname.startsWith('/admin')) {
-    return NextResponse.next();
+function decodeBasicAuth(authHeader: string) {
+  // "Basic base64(user:pass)"
+  const base64 = authHeader.split(' ')[1] || ''
+  // Edge runtime: używamy atob (Web API), nie Buffer
+  const decoded = globalThis.atob(base64) // zwraca "user:pass"
+  const idx = decoded.indexOf(':')
+  const user = idx >= 0 ? decoded.slice(0, idx) : decoded
+  const pass = idx >= 0 ? decoded.slice(idx + 1) : ''
+  return { user, pass }
+}
+
+async function logToSupabase(req: NextRequest) {
+  // pomiń assety/_next itp.
+  const p = req.nextUrl.pathname
+  if (/^\/(_next|favicon\.ico|robots\.txt|sitemap\.xml|.*\.(png|jpg|jpeg|webp|svg|gif|css|js|ico|txt))$/i.test(p)) {
+    return
   }
 
-  const auth = req.headers.get('authorization') || '';
-  if (!auth.startsWith('Basic ')) {
-    return unauthorized('no basic header');
+  const url = new URL(req.url)
+  const xff = req.headers.get('x-forwarded-for') || ''
+  const ip  = xff.split(',')[0]?.trim() || null
+
+  const payload = {
+    ip,
+    method: req.method,
+    path: url.pathname,
+    search: url.search || '',
+    host: url.host,
+    referer: req.headers.get('referer') || null,
+    ua: req.headers.get('user-agent') || null,
   }
 
-  try {
-    const base64 = auth.split(' ')[1] || '';
-    // hasło może zawierać dwukropek, więc nie używamy prostego split(':', 2)
-    const decoded = Buffer.from(base64, 'base64').toString('utf8');
-    const idx = decoded.indexOf(':');
-    const user = idx >= 0 ? decoded.slice(0, idx) : decoded;
-    const pass = idx >= 0 ? decoded.slice(idx + 1) : '';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-    if (user === USER && pass === PASS) {
-      return NextResponse.next();
+  // „fire-and-forget” + keepalive, by nie blokować odpowiedzi
+  fetch(`${supabaseUrl}/rest/v1/http_logs`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'apikey': anon,
+      'authorization': `Bearer ${anon}`,
+      'prefer': 'return=minimal',
+    },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => {})
+}
+
+export async function middleware(req: NextRequest) {
+  // 1) logujemy KAŻDY request (poza assetami)
+  logToSupabase(req) // bez await
+
+  // 2) ochrona Basic Auth dla /admin
+  if (req.nextUrl.pathname.startsWith('/admin')) {
+    if (!USER || !PASS) {
+      // brak poświadczeń w ENV — blokujemy w prod
+      return unauthorized('missing env creds')
     }
-    return unauthorized('bad creds');
-  } catch (e) {
-    return unauthorized('decode error');
+    const auth = req.headers.get('authorization') || ''
+    if (!auth.startsWith('Basic ')) return unauthorized('no basic header')
+
+    try {
+      const { user, pass } = decodeBasicAuth(auth)
+      if (user === USER && pass === PASS) {
+        return NextResponse.next()
+      }
+      return unauthorized('bad creds')
+    } catch {
+      return unauthorized('decode error')
+    }
   }
+
+  return NextResponse.next()
 }
 
+// matcher: logujemy wszystko, ale chronimy /admin
 export const config = {
-  matcher: ['/admin/:path*'],
-};
+  matcher: ['/((?!_next|.*\\.(png|jpg|jpeg|webp|svg|gif|css|js|ico|txt)).*)'],
+}
