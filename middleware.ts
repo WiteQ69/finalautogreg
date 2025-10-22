@@ -1,14 +1,18 @@
-// middleware.ts (Edge Runtime)
+// middleware.ts (Next.js / Edge Runtime)
 import { NextResponse, NextRequest } from 'next/server'
 
-const ENV_USER = process.env.ADMIN_USER || ''
-const ENV_PASS = process.env.ADMIN_PASS || ''
+// ==== KONFIG ====
+const ADMIN_USER = process.env.ADMIN_USER || ''
+const ADMIN_PASS = process.env.ADMIN_PASS || ''
 
-// ——— USTAW TO W VERCEL ENV! ———
-// W produkcji NIE używaj fallbacków:
-const USER = ENV_USER
-const PASS = ENV_PASS
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+// Rozsądny filtr assetów i technicznych ścieżek
+const ASSET_EXT_RE = /\.(?:png|jpe?g|webp|svg|gif|css|js|mjs|map|ico|txt|woff2?|ttf|eot)$/i
+const STATIC_PATHS = new Set(['/favicon.ico', '/robots.txt', '/sitemap.xml'])
+
+// ==== POMOCNICZE ====
 function unauthorized(reason?: string) {
   const headers: Record<string, string> = {
     'WWW-Authenticate': 'Basic realm="Admin Area"',
@@ -23,60 +27,68 @@ function unauthorized(reason?: string) {
 function decodeBasicAuth(authHeader: string) {
   // "Basic base64(user:pass)"
   const base64 = authHeader.split(' ')[1] || ''
-  // Edge runtime: używamy atob (Web API), nie Buffer
-  const decoded = globalThis.atob(base64) // zwraca "user:pass"
+  // Edge Runtime → atob jest dostępne (Web API)
+  const decoded = globalThis.atob(base64) // "user:pass"
   const idx = decoded.indexOf(':')
-  const user = idx >= 0 ? decoded.slice(0, idx) : decoded
-  const pass = idx >= 0 ? decoded.slice(idx + 1) : ''
-  return { user, pass }
+  return {
+    user: idx >= 0 ? decoded.slice(0, idx) : decoded,
+    pass: idx >= 0 ? decoded.slice(idx + 1) : '',
+  }
+}
+
+function shouldSkipLogging(req: NextRequest) {
+  const p = req.nextUrl.pathname
+  if (p.startsWith('/_next')) return true
+  if (STATIC_PATHS.has(p)) return true
+  if (ASSET_EXT_RE.test(p)) return true
+  // Opcjonalnie: pomiń preflighty CORS
+  if (req.method === 'OPTIONS') return true
+  return false
 }
 
 async function logToSupabase(req: NextRequest) {
-  // pomiń assety/_next itp.
-  const p = req.nextUrl.pathname
-  if (/^\/(_next|favicon\.ico|robots\.txt|sitemap\.xml|.*\.(png|jpg|jpeg|webp|svg|gif|css|js|ico|txt))$/i.test(p)) {
-    return
+  try {
+    if (shouldSkipLogging(req)) return
+
+    const url = new URL(req.url)
+    const xff = req.headers.get('x-forwarded-for') || ''
+    const ip = xff.split(',')[0]?.trim() || null
+
+    const payload = {
+      ip,
+      method: req.method,
+      path: url.pathname,
+      search: url.search || '',
+      host: url.host,
+      referer: req.headers.get('referer') || null,
+      ua: req.headers.get('user-agent') || null,
+    }
+
+    // „fire-and-forget” – bez await, żeby nie spowalniać requestu
+    fetch(`${SUPABASE_URL}/rest/v1/http_logs`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'authorization': `Bearer ${SUPABASE_ANON}`,
+        'prefer': 'return=minimal',
+      },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    // nic – nie blokujemy ruchu przez błąd logowania
   }
-
-  const url = new URL(req.url)
-  const xff = req.headers.get('x-forwarded-for') || ''
-  const ip  = xff.split(',')[0]?.trim() || null
-
-  const payload = {
-    ip,
-    method: req.method,
-    path: url.pathname,
-    search: url.search || '',
-    host: url.host,
-    referer: req.headers.get('referer') || null,
-    ua: req.headers.get('user-agent') || null,
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-  // „fire-and-forget” + keepalive, by nie blokować odpowiedzi
-  fetch(`${supabaseUrl}/rest/v1/http_logs`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'apikey': anon,
-      'authorization': `Bearer ${anon}`,
-      'prefer': 'return=minimal',
-    },
-    body: JSON.stringify(payload),
-    keepalive: true,
-  }).catch(() => {})
 }
 
+// ==== GŁÓWNA FUNKCJA ====
 export async function middleware(req: NextRequest) {
-  // 1) logujemy KAŻDY request (poza assetami)
-  logToSupabase(req) // bez await
+  // 1) Loguj wszystkie żądania (poza assetami)
+  logToSupabase(req)
 
-  // 2) ochrona Basic Auth dla /admin
+  // 2) Basic Auth dla /admin
   if (req.nextUrl.pathname.startsWith('/admin')) {
-    if (!USER || !PASS) {
-      // brak poświadczeń w ENV — blokujemy w prod
+    if (!ADMIN_USER || !ADMIN_PASS) {
       return unauthorized('missing env creds')
     }
     const auth = req.headers.get('authorization') || ''
@@ -84,7 +96,7 @@ export async function middleware(req: NextRequest) {
 
     try {
       const { user, pass } = decodeBasicAuth(auth)
-      if (user === USER && pass === PASS) {
+      if (user === ADMIN_USER && pass === ADMIN_PASS) {
         return NextResponse.next()
       }
       return unauthorized('bad creds')
@@ -96,7 +108,7 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next()
 }
 
-// matcher: logujemy wszystko, ale chronimy /admin
+// Matcher bez złożonych regexów – unika błędu builda
 export const config = {
-  matcher: ['/((?!_next|.*\\.(png|jpg|jpeg|webp|svg|gif|css|js|ico|txt)).*)'],
+  matcher: ['/:path*'],
 }
