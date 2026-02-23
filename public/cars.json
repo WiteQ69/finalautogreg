@@ -1,0 +1,54 @@
+[
+  {
+    "id": "1",
+    "title": "BMW X3 xDrive20d M Sport",
+    "year": 2022,
+    "mileage": 45000,
+    "engine": "2.0 TDI 190 KM",
+    "price_text": "189 000 PLN",
+    "status": "active",
+    "main_image_path": "https://images.pexels.com/photos/1280560/pexels-photo-1280560.jpeg",
+    "firstOwner": true,
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": "2",
+    "title": "Audi A4 Avant 2.0 TFSI quattro",
+    "year": 2021,
+    "mileage": 62000,
+    "engine": "2.0 TFSI 252 KM",
+    "price_text": "165 000 PLN",
+    "status": "active",
+    "main_image_path": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg",
+    "firstOwner": false,
+    "createdAt": "2024-01-10T14:30:00Z",
+    "updatedAt": "2024-01-10T14:30:00Z"
+  },
+  {
+    "id": "3",
+    "title": "Mercedes-Benz C-Class C220d AMG",
+    "year": 2020,
+    "mileage": 78000,
+    "engine": "2.0 CDI 194 KM",
+    "price_text": "145 000 PLN",
+    "status": "sold",
+    "main_image_path": "https://images.pexels.com/photos/1592384/pexels-photo-1592384.jpeg",
+    "firstOwner": true,
+    "createdAt": "2023-12-20T09:15:00Z",
+    "updatedAt": "2024-01-05T16:45:00Z"
+  },
+  {
+    "id": "4",
+    "title": "Volkswagen Golf GTI 2.0 TSI",
+    "year": 2019,
+    "mileage": 95000,
+    "engine": "2.0 TSI 245 KM",
+    "price_text": "125 000 PLN",
+    "status": "sold",
+    "main_image_path": "https://images.pexels.com/photos/1719648/pexels-photo-1719648.jpeg",
+    "firstOwner": false,
+    "createdAt": "2023-11-15T11:20:00Z",
+    "updatedAt": "2023-12-28T13:10:00Z"
+  }
+]
