@@ -10,7 +10,7 @@ import ReservationBadge from '@/components/ReservationBadge';
 import Flag1 from '@/components/Flag1';
 import CountryFlag from '@/components/CountryFlag';
 import { Flag as FlagIcon } from 'lucide-react';
-
+import FinancingCta from "@/components/lead/FinancingCta";
 import Image from 'next/image';
 import {
   Gauge,
@@ -409,22 +409,8 @@ export default async function CarPage({ params }: { params: { id: string } }) {
                 </dl>
                 
               </div>
-               {/* KREDYTY  */}
-<div className="mt-6 flex justify-end justify-center">
-    <a
-      href="https://www.kredytnaauto.pl"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <Image
-        src="/dupa.png"
-        alt="Sprawdź okres finansowania"
-        width={350}
-        height={100}
-        className="hover:opacity-90 transition"
-      />
-    </a>
-  </div>
+            {/* KREDYTY */}
+<FinancingCta />
             </div>
 
           </aside>

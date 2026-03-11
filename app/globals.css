@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* możesz zostawić te RGB jeśli gdzieś tego używasz */
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -16,6 +17,7 @@
   }
 }
 
+/* SHADCN / tokens */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -44,6 +46,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -70,13 +73,82 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* --- FORM UI: inputs/selects/checkbox --- */
+.input-styled,
+.select-styled {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgb(226 232 240); /* slate-200 */
+  background: rgb(248 250 252); /* slate-50 */
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.2;
+  color: rgb(15 23 42); /* slate-900 */
+  outline: none;
+  transition: box-shadow 150ms ease, border-color 150ms ease,
+    background 150ms ease;
+}
+
+.input-styled::placeholder {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+.input-styled:focus,
+.select-styled:focus {
+  border-color: rgb(59 130 246); /* blue-500 */
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+  background: #fff;
+}
+
+.input-styled:disabled,
+.select-styled:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: rgb(241 245 249); /* slate-100 */
+}
+
+.select-styled {
+  appearance: none;
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      rgb(100 116 139) 50%
+    ),
+    linear-gradient(135deg, rgb(100 116 139) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 54%, calc(100% - 12px) 54%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 38px;
+}
+
+.checkbox-styled {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgb(203 213 225); /* slate-300 */
+  background: rgb(248 250 252); /* slate-50 */
+  accent-color: rgb(37 99 235); /* blue-600 */
+}
+@layer components {
+  .container-narrow {
+    @apply w-full max-w-2xl mx-auto px-4;
+  }
+
+  .section-padding {
+    @apply py-12 md:py-16;
+  }
+
+  .card-elevated {
+    @apply bg-card rounded-2xl border shadow-sm;
   }
 }
