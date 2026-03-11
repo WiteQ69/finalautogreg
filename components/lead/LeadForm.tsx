@@ -14,6 +14,19 @@ const employmentTypes = [
 ];
 
 const vehicleTypes = ["Osobowy", "Dostawczy", "Motocykl", "4x4", "Pozostałe"];
+const vehicleOrigins = ["Polski salon", "Importowany"];
+const fuelTypes = [
+  "Benzyna",
+  "Diesel",
+  "LPG",
+  "Hybryda",
+  "Plug-in Hybrid",
+  "Elektryczny",
+  "CNG",
+  "Wodór",
+  "Inne",
+];
+const sellerTypes = ["Firma", "Osoba prywatna"];
 
 const maritalStatuses = [
   "Kawaler/Panna",
@@ -40,63 +53,15 @@ const LeadForm = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Bazowe (szybki kontakt)
   const [basicData, setBasicData] = useState({
     firstName: "",
     lastName: "",
     phone: "",
     email: "",
-    consent: false, // <- dodajemy zgodę
+    consent: false,
     honeypot: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (basicData.honeypot) return;
-
-  if (!canSubmit) {
-    setErrorMsg("Uzupełnij wymagane pola i zaznacz zgody.");
-    return;
-  }
-
-  setIsSubmitting(true);
-  setErrorMsg(null);
-  setIsSuccess(false);
-
-  // ✅ jeden obiekt ze wszystkimi polami (to co ktoś wpisał)
-  const form = {
-    ...basicData,
-    ...(isExpanded ? data : {}), // jeżeli nie rozwinął, nie wysyłamy pełnych danych
-  };
-
-  try {
-    const res = await fetch("/api/lead", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        source: isExpanded ? "leadform_full" : "leadform_basic",
-        honeypot: basicData.honeypot,
-        form,
-        consents,
-      }),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(txt || "Request failed");
-    }
-
-    setIsSuccess(true);
-  } catch (err) {
-    console.error(err);
-    setErrorMsg("Nie udało się wysłać formularza. Spróbuj ponownie.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-
-  // Pełne dane (PDF + bank) — scalone
   const [data, setData] = useState({
     // Dane klienta
     clientType: "private" as "private" | "jdg",
@@ -150,6 +115,17 @@ const LeadForm = () => {
     vehicleBrandModel: "",
     vehicleYear: "",
     vehiclePriceBrutto: "",
+    vehicleOrigin: "",
+    engineCapacity: "",
+    fuelType: "",
+    vin: "",
+    firstRegistrationDate: "",
+
+    // Sprzedawca pojazdu
+    sellerType: "Firma",
+    sellerTaxIdOrPesel: "",
+    sellerName: "",
+    sellerBankAccount: "",
 
     // Kredyt
     loanAmount: "",
@@ -160,23 +136,18 @@ const LeadForm = () => {
     // Spłata
     paymentMethod: "auto" as "transfer" | "auto",
     paymentDay: "10",
+    installmentBankAccount: "", // rachunek do automatycznego pobierania rat
   });
 
-  // Zgody (PDF + bank) — spójne typy, bez duplikatów
   const [consents, setConsents] = useState({
-    // RODO / kontakt
-    rodo: false, // obowiązkowe
+    rodo: false,
     contactOffer: false,
-
-    // Bank — TAK/NIE (z formularza bankowego)
     veloBankQuery: "" as YesNo,
     bigKrdQuery: "" as YesNo,
     erifBigQuery: "" as YesNo,
     verifyBusinessInfo: "" as YesNo,
     verifyPesel: "" as YesNo,
-
-    // Regulamin / wniosek
-    acceptRegulations: false, // obowiązkowe
+    acceptRegulations: false,
   });
 
   const canSubmit = useMemo(() => {
@@ -192,23 +163,65 @@ const LeadForm = () => {
     return Boolean(requiredBasics);
   }, [basicData, consents]);
 
- 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (basicData.honeypot) return;
+
+    if (!canSubmit) {
+      setErrorMsg("Uzupełnij wymagane pola i zaznacz zgody.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    setIsSuccess(false);
+
+    const form = {
+      ...basicData,
+      ...(isExpanded ? data : {}),
+    };
+
+    try {
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: isExpanded ? "leadform_full" : "leadform_basic",
+          honeypot: basicData.honeypot,
+          form,
+          consents,
+        }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(txt || "Request failed");
+      }
+
+      setIsSuccess(true);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Nie udało się wysłać formularza. Spróbuj ponownie.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isSuccess) {
     return (
       <section id="wniosek" className="bg-background section-padding">
-  <div className="container-narrow max-w-2xl text-center py-16">
-    <CheckCircle className="w-20 h-20 text-primary mx-auto mb-6" />
-    <h2 className="text-2xl md:text-3xl font-heading font-bold mb-4">
-      Wniosek został pomyślnie wysłany!
-    </h2>
-    <p className="text-lg text-muted-foreground font-body">
-      Dziękujemy za zaufanie. Obecnie analizujemy Twoje dane i przygotowujemy propozycję rat
-      dopasowanych do Twoich możliwości. 
-      <p>Skontaktujemy się z Tobą maksymalnie w ciągu 24 godzin roboczych.</p>
-    </p>
-  </div>
-</section>
+        <div className="container-narrow max-w-2xl text-center py-16">
+          <CheckCircle className="w-20 h-20 text-primary mx-auto mb-6" />
+          <h2 className="text-2xl md:text-3xl font-heading font-bold mb-4">
+            Wniosek został pomyślnie wysłany!
+          </h2>
+          <p className="text-lg text-muted-foreground font-body">
+            Dziękujemy za zaufanie. Obecnie analizujemy Twoje dane i przygotowujemy propozycję rat
+            dopasowanych do Twoich możliwości.
+          </p>
+          <p>Skontaktujemy się z Tobą maksymalnie w ciągu 24 godzin roboczych.</p>
+        </div>
+      </section>
     );
   }
 
@@ -219,12 +232,13 @@ const LeadForm = () => {
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4">
             Wniosek
           </h2>
-          <p className="text-muted-foreground font-body">Uzupełnij dane. Formularz scalony (PDF + bank).</p>
+          <p className="text-muted-foreground font-body">
+            Uzupełnij dane. Formularz scalony (PDF + bank).
+          </p>
         </div>
 
         <div className="card-elevated p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Honeypot */}
             <input
               type="text"
               name="website"
@@ -235,7 +249,6 @@ const LeadForm = () => {
               autoComplete="off"
             />
 
-            {/* PODSTAWOWE */}
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -287,7 +300,6 @@ const LeadForm = () => {
               </div>
             </div>
 
-            {/* Toggle pełnych danych */}
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
@@ -306,430 +318,9 @@ const LeadForm = () => {
               )}
             </button>
 
-            {/* PEŁNE DANE */}
             {isExpanded && (
               <div className="space-y-7 pt-4 border-t border-border animate-fade-in">
-                {/* DANE KLIENTA */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Dane klienta</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Typ klienta</label>
-                      <select
-                        value={data.clientType}
-                        onChange={(e) => setData({ ...data, clientType: e.target.value as "private" | "jdg" })}
-                        className="select-styled"
-                      >
-                        <option value="private">Osoba prywatna</option>
-                        <option value="jdg">Jednoosobowa działalność gospodarcza</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Drugie imię</label>
-                      <input
-                        type="text"
-                        value={data.secondName}
-                        onChange={(e) => setData({ ...data, secondName: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-body font-medium mb-1.5">Nazwisko rodowe matki</label>
-                    <input
-                      type="text"
-                      value={data.mothersMaidenName}
-                      onChange={(e) => setData({ ...data, mothersMaidenName: e.target.value })}
-                      className="input-styled"
-                    />
-                  </div>
-
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">PESEL</label>
-                      <input
-                        type="text"
-                        value={data.pesel}
-                        onChange={(e) => setData({ ...data, pesel: e.target.value })}
-                        className="input-styled"
-                        placeholder="11 cyfr"
-                        inputMode="numeric"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Data urodzenia</label>
-                      <input
-                        type="date"
-                        value={data.birthDate}
-                        onChange={(e) => setData({ ...data, birthDate: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Stan cywilny</label>
-                      <select
-                        value={data.maritalStatus}
-                        onChange={(e) => setData({ ...data, maritalStatus: e.target.value })}
-                        className="select-styled"
-                      >
-                        <option value="">Wybierz...</option>
-                        {maritalStatuses.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Obywatelstwo</label>
-                      <input
-                        type="text"
-                        value={data.citizenship}
-                        onChange={(e) => setData({ ...data, citizenship: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Państwo urodzenia</label>
-                      <input
-                        type="text"
-                        value={data.countryOfBirth}
-                        onChange={(e) => setData({ ...data, countryOfBirth: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* DOKUMENT */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Dokument tożsamości</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Typ dokumentu</label>
-                      <select
-                        value={data.idDocType}
-                        onChange={(e) => setData({ ...data, idDocType: e.target.value })}
-                        className="select-styled"
-                      >
-                        <option value="">Wybierz...</option>
-                        {idDocTypes.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Nr dokumentu</label>
-                      <input
-                        type="text"
-                        value={data.idDocNumber}
-                        onChange={(e) => setData({ ...data, idDocNumber: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-body font-medium mb-1.5">Organ wydający dokument</label>
-                    <input
-                      type="text"
-                      value={data.idDocIssuer}
-                      onChange={(e) => setData({ ...data, idDocIssuer: e.target.value })}
-                      className="input-styled"
-                    />
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Data wydania</label>
-                      <input
-                        type="date"
-                        value={data.idDocIssueDate}
-                        onChange={(e) => setData({ ...data, idDocIssueDate: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Data ważności</label>
-                      <input
-                        type="date"
-                        value={data.idDocExpiryDate}
-                        onChange={(e) => setData({ ...data, idDocExpiryDate: e.target.value })}
-                        className="input-styled"
-                        disabled={data.idDocNoExpiry}
-                      />
-                      <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={data.idDocNoExpiry}
-                          onChange={(e) => setData({ ...data, idDocNoExpiry: e.target.checked })}
-                          className="checkbox-styled"
-                        />
-                        <span className="font-body text-sm">Bezterminowo</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* PRAWO JAZDY */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Prawo jazdy</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4 items-start">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Nr prawa jazdy</label>
-                      <input
-                        type="text"
-                        value={data.drivingLicenseNumber}
-                        onChange={(e) => setData({ ...data, drivingLicenseNumber: e.target.value })}
-                        className="input-styled"
-                        disabled={data.noDrivingLicense}
-                      />
-                      <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={data.noDrivingLicense}
-                          onChange={(e) => setData({ ...data, noDrivingLicense: e.target.checked })}
-                          className="checkbox-styled"
-                        />
-                        <span className="font-body text-sm">Brak</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ADRES */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Adres zamieszkania</h3>
-
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Kod pocztowy</label>
-                      <input
-                        type="text"
-                        value={data.addressPostalCode}
-                        onChange={(e) => setData({ ...data, addressPostalCode: e.target.value })}
-                        className="input-styled"
-                        placeholder="00-000"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Miejscowość</label>
-                      <input
-                        type="text"
-                        value={data.addressCity}
-                        onChange={(e) => setData({ ...data, addressCity: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Ulica i numer</label>
-                      <input
-                        type="text"
-                        value={data.addressStreetAndNo}
-                        onChange={(e) => setData({ ...data, addressStreetAndNo: e.target.value })}
-                        className="input-styled"
-                        placeholder="np. Kwiatowa 10/2"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* DOCHÓD */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Źródło dochodu</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Forma zatrudnienia</label>
-                      <select
-                        value={data.employmentType}
-                        onChange={(e) => setData({ ...data, employmentType: e.target.value })}
-                        className="select-styled"
-                      >
-                        <option value="">Wybierz...</option>
-                        {employmentTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">
-                        Dochód łączny netto (średnia z ostatnich 6 m-cy)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={data.netIncome6mAvg}
-                        onChange={(e) => setData({ ...data, netIncome6mAvg: e.target.value })}
-                        className="input-styled"
-                        placeholder="np. 5500"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* PRACODAWCA */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Miejsce osiągania dochodu</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Nazwa</label>
-                      <input
-                        type="text"
-                        value={data.employerName}
-                        onChange={(e) => setData({ ...data, employerName: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">NIP pracodawcy/firmy</label>
-                      <input
-                        type="text"
-                        value={data.employerNip}
-                        onChange={(e) => setData({ ...data, employerNip: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Telefon</label>
-                      <input
-                        type="tel"
-                        value={data.employerPhone}
-                        onChange={(e) => setData({ ...data, employerPhone: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Stanowisko</label>
-                      <input
-                        type="text"
-                        value={data.position}
-                        onChange={(e) => setData({ ...data, position: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Kod pocztowy</label>
-                      <input
-                        type="text"
-                        value={data.employerPostalCode}
-                        onChange={(e) => setData({ ...data, employerPostalCode: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Miejscowość</label>
-                      <input
-                        type="text"
-                        value={data.employerCity}
-                        onChange={(e) => setData({ ...data, employerCity: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Ulica i numer</label>
-                      <input
-                        type="text"
-                        value={data.employerStreetAndNo}
-                        onChange={(e) => setData({ ...data, employerStreetAndNo: e.target.value })}
-                        className="input-styled"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-body font-medium mb-1.5">Data zatrudnienia</label>
-                    <input
-                      type="date"
-                      value={data.employmentStartDate}
-                      onChange={(e) => setData({ ...data, employmentStartDate: e.target.value })}
-                      className="input-styled"
-                    />
-                  </div>
-                </div>
-
-                {/* OBCIĄŻENIA */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Obciążenia / limity</h3>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">
-                        Miesięczne łączne obciążenia finansowe
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={data.monthlyObligations}
-                        onChange={(e) => setData({ ...data, monthlyObligations: e.target.value })}
-                        className="input-styled"
-                        placeholder="np. 1200"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">Ilość osób na utrzymaniu</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={data.dependentsCount}
-                        onChange={(e) => setData({ ...data, dependentsCount: e.target.value })}
-                        className="input-styled"
-                        placeholder="np. 1"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">
-                        Posiadane limity w rachunkach – suma
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={data.accountLimitsSum}
-                        onChange={(e) => setData({ ...data, accountLimitsSum: e.target.value })}
-                        className="input-styled"
-                        placeholder="np. 5000"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-1.5">
-                        Posiadane limity na kartach kredytowych – suma
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={data.cardLimitsSum}
-                        onChange={(e) => setData({ ...data, cardLimitsSum: e.target.value })}
-                        className="input-styled"
-                        placeholder="np. 8000"
-                      />
-                    </div>
-                  </div>
-                </div>
+                {/* ...pozostawiasz swoje wcześniejsze sekcje bez zmian... */}
 
                 {/* POJAZD */}
                 <div className="space-y-4">
@@ -786,6 +377,143 @@ const LeadForm = () => {
                         placeholder="80000"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">Pochodzenie pojazdu</label>
+                      <select
+                        value={data.vehicleOrigin}
+                        onChange={(e) => setData({ ...data, vehicleOrigin: e.target.value })}
+                        className="select-styled"
+                      >
+                        <option value="">Wybierz...</option>
+                        {vehicleOrigins.map((origin) => (
+                          <option key={origin} value={origin}>
+                            {origin}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">Pojemność silnika (cm³)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={data.engineCapacity}
+                        onChange={(e) => setData({ ...data, engineCapacity: e.target.value })}
+                        className="input-styled"
+                        placeholder="np. 1998"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">Rodzaj paliwa</label>
+                      <select
+                        value={data.fuelType}
+                        onChange={(e) => setData({ ...data, fuelType: e.target.value })}
+                        className="select-styled"
+                      >
+                        <option value="">Wybierz...</option>
+                        {fuelTypes.map((fuel) => (
+                          <option key={fuel} value={fuel}>
+                            {fuel}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">Nr VIN</label>
+                      <input
+                        type="text"
+                        value={data.vin}
+                        onChange={(e) => setData({ ...data, vin: e.target.value.toUpperCase() })}
+                        className="input-styled"
+                        placeholder="17 znaków"
+                        maxLength={17}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-body font-medium mb-1.5">
+                      Data pierwszej rejestracji
+                    </label>
+                    <input
+                      type="date"
+                      value={data.firstRegistrationDate}
+                      onChange={(e) => setData({ ...data, firstRegistrationDate: e.target.value })}
+                      className="input-styled"
+                    />
+                  </div>
+                </div>
+
+                {/* SPRZEDAWCA */}
+                <div className="space-y-4">
+                  <h3 className="font-heading font-bold text-lg">Sprzedawca samochodu</h3>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">Rodzaj sprzedawcy</label>
+                      <select
+                        value={data.sellerType}
+                        onChange={(e) => setData({ ...data, sellerType: e.target.value })}
+                        className="select-styled"
+                      >
+                        {sellerTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">
+                        {data.sellerType === "Firma" ? "NIP" : "PESEL"}
+                      </label>
+                      <input
+                        type="text"
+                        value={data.sellerTaxIdOrPesel}
+                        onChange={(e) => setData({ ...data, sellerTaxIdOrPesel: e.target.value })}
+                        className="input-styled"
+                        placeholder={data.sellerType === "Firma" ? "10 cyfr" : "11 cyfr"}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-body font-medium mb-1.5">
+                      {data.sellerType === "Firma" ? "Nazwa firmy" : "Imię i nazwisko"}
+                    </label>
+                    <input
+                      type="text"
+                      value={data.sellerName}
+                      onChange={(e) => setData({ ...data, sellerName: e.target.value })}
+                      className="input-styled"
+                      placeholder={data.sellerType === "Firma" ? "Nazwa firmy" : "Jan Kowalski"}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-body font-medium mb-1.5">
+                      Numer rachunku do przelewu za zakup samochodu
+                    </label>
+                    <input
+                      type="text"
+                      value={data.sellerBankAccount}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          sellerBankAccount: e.target.value.replace(/\s/g, ""),
+                        })
+                      }
+                      className="input-styled"
+                      placeholder="np. 11112222333344445555666677"
+                      inputMode="numeric"
+                    />
                   </div>
                 </div>
 
@@ -877,102 +605,33 @@ const LeadForm = () => {
                       </select>
                     </div>
                   </div>
+
+                  {data.paymentMethod === "auto" && (
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-1.5">
+                        Numer rachunku bankowego, z którego będzie pobierana rata
+                      </label>
+                      <input
+                        type="text"
+                        value={data.installmentBankAccount}
+                        onChange={(e) =>
+                          setData({
+                            ...data,
+                            installmentBankAccount: e.target.value.replace(/\s/g, ""),
+                          })
+                        }
+                        className="input-styled"
+                        placeholder="np. 11112222333344445555666677"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                {/* ZGODY (BANK) — TAK/NIE */}
-                <div className="space-y-4">
-                  <h3 className="font-heading font-bold text-lg">Zgody (bank)</h3>
-
-                  <div className="space-y-3">
-                    <div className="grid sm:grid-cols-[1fr_220px] gap-3 items-center">
-                      <p className="font-body text-sm text-muted-foreground">
-                        Wyrażam zgodę na wystąpienie przez VeloBank S.A. z siedzibą w Warszawie.
-                      </p>
-                      <select
-                        value={consents.veloBankQuery}
-                        onChange={(e) => setConsents({ ...consents, veloBankQuery: e.target.value as YesNo })}
-                        className="select-styled"
-                      >
-                        {yesNoOptions.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid sm:grid-cols-[1fr_220px] gap-3 items-center">
-                      <p className="font-body text-sm text-muted-foreground">
-                        Wyrażam zgodę na wystąpienie przez VeloBank do Krajowego Rejestru Długów BIG S.A. (Wrocław).
-                      </p>
-                      <select
-                        value={consents.bigKrdQuery}
-                        onChange={(e) => setConsents({ ...consents, bigKrdQuery: e.target.value as YesNo })}
-                        className="select-styled"
-                      >
-                        {yesNoOptions.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid sm:grid-cols-[1fr_220px] gap-3 items-center">
-                      <p className="font-body text-sm text-muted-foreground">
-                        Wyrażam zgodę na wystąpienie przez VeloBank do ERIF BIG (Warszawa).
-                      </p>
-                      <select
-                        value={consents.erifBigQuery}
-                        onChange={(e) => setConsents({ ...consents, erifBigQuery: e.target.value as YesNo })}
-                        className="select-styled"
-                      >
-                        {yesNoOptions.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid sm:grid-cols-[1fr_220px] gap-3 items-center">
-                      <p className="font-body text-sm text-muted-foreground">
-                        Wyrażam zgodę na weryfikację informacji Klienta dot. sytuacji prawnej/finansowej/majątkowej (w tym miejsca
-                        prowadzenia działalności).
-                      </p>
-                      <select
-                        value={consents.verifyBusinessInfo}
-                        onChange={(e) => setConsents({ ...consents, verifyBusinessInfo: e.target.value as YesNo })}
-                        className="select-styled"
-                      >
-                        {yesNoOptions.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid sm:grid-cols-[1fr_220px] gap-3 items-center">
-                      <p className="font-body text-sm text-muted-foreground">Zgoda na weryfikację numeru PESEL.</p>
-                      <select
-                        value={consents.verifyPesel}
-                        onChange={(e) => setConsents({ ...consents, verifyPesel: e.target.value as YesNo })}
-                        className="select-styled"
-                      >
-                        {yesNoOptions.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                {/* ...dalej zostawiasz sekcję zgód bankowych bez zmian... */}
               </div>
             )}
 
-            {/* ZGODY OGÓLNE */}
             <div className="space-y-3 pt-4 border-t border-border">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
@@ -994,7 +653,9 @@ const LeadForm = () => {
                   onChange={(e) => setConsents({ ...consents, contactOffer: e.target.checked })}
                   className="checkbox-styled mt-0.5"
                 />
-                <span className="font-body text-sm text-muted-foreground">Wyrażam zgodę na kontakt w sprawie oferty</span>
+                <span className="font-body text-sm text-muted-foreground">
+                  Wyrażam zgodę na kontakt w sprawie oferty
+                </span>
               </label>
 
               <label className="flex items-start gap-3 cursor-pointer">
@@ -1011,6 +672,8 @@ const LeadForm = () => {
               </label>
             </div>
 
+            {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
+
             <button
               type="submit"
               disabled={isSubmitting || !canSubmit}
@@ -1019,7 +682,9 @@ const LeadForm = () => {
               {isSubmitting ? "Wysyłam..." : "Wyślij wniosek"}
             </button>
 
-            <p className="text-center text-gold font-heading font-semibold text-sm">Bez zobowiązań • Bez opłat</p>
+            <p className="text-center text-gold font-heading font-semibold text-sm">
+              Bez zobowiązań • Bez opłat
+            </p>
           </form>
         </div>
       </div>
