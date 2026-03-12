@@ -39,7 +39,7 @@ export async function sendEmail({
 
   for (const rcpt of recipients) {
     await transporter.sendMail({
-      from: `"AutoPaczyński" <${process.env.SMTP_USER}>`,
+      from: `"AUTOGREG Grzegorz Paczyński" <${process.env.SMTP_USER}>`,
       to: rcpt,
       subject,
       html,
