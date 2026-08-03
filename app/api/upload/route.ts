@@ -6,6 +6,19 @@ import crypto from 'crypto';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 45 * 1024 * 1024;
+const ALLOWED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'image/heic',
+  'image/heif',
+  'video/mp4',
+  'video/webm',
+]);
+
 // Fallback, gdyby extension/filename było dziwne
 function safeExtFromName(name: string) {
   const parts = name.split('.');
@@ -46,6 +59,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No file found (key: file)' }, { status: 400 });
     }
 
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { error: 'Nieobsługiwany format pliku.' },
+        { status: 415 }
+      );
+    }
+
+    const isImage = file.type.startsWith('image/');
+    const maxBytes = isImage ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
+    if (file.size > maxBytes) {
+      return NextResponse.json(
+        { error: `Plik jest za duży. Maksymalny rozmiar to ${maxBytes / 1024 / 1024} MB.` },
+        { status: 413 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Preferuj rozszerzenie z nazwy, a jak brak/krzaki to z MIME
@@ -61,6 +90,7 @@ export async function POST(req: Request) {
       .from('cars')
       .upload(filename, buffer, {
         contentType: file.type || 'application/octet-stream',
+        cacheControl: '31536000',
         upsert: false,
       });
 

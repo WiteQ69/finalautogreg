@@ -29,6 +29,7 @@ import {
   REGISTERED_IN,
   SALE_DOCS,
 } from '@/lib/schemas';
+import { compressImageForUpload } from '@/lib/compress-image';
 
 export default function NewCarPage() {
   const router = useRouter();
@@ -58,8 +59,9 @@ export default function NewCarPage() {
   async function uploadFiles(files: File[]) {
     const urls: string[] = [];
     for (const file of files) {
+      const uploadFile = await compressImageForUpload(file);
       const fd = new FormData();
-      fd.append('file', file); // klucz MUSI być 'file'
+      fd.append('file', uploadFile); // klucz MUSI być 'file'
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');

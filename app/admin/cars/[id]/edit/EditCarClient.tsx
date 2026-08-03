@@ -32,6 +32,7 @@ import {
   SALE_DOCS,
   // ❌ usuwamy EQUIPMENT_LIST – korzystamy z EquipmentField
 } from '@/lib/schemas';
+import { compressImageForUpload } from '@/lib/compress-image';
 
 type Props = { id: string };
 
@@ -178,8 +179,9 @@ export default function EditCarClient({ id }: Props) {
   async function uploadFiles(files: File[]) {
     const urls: string[] = [];
     for (const file of files) {
+      const uploadFile = await compressImageForUpload(file);
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', uploadFile);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
