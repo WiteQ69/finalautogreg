@@ -265,7 +265,7 @@ main_image_path:
   };
 
   const markAsSold = async () => {
-    if (!confirm('Oznaczyć ten samochód jako SPRZEDANY?')) return;
+    if (!confirm('Oznaczyć ten samochód jako SPRZEDANY? Zostanie pierwsze zdjęcie, a pozostałe zostaną trwale usunięte.')) return;
     try {
       const res = await fetch(`/api/cars/${id}`, {
         method: 'PUT',
@@ -301,7 +301,7 @@ main_image_path:
   };
 
   const removeCar = async () => {
-    if (!confirm('Na pewno usunąć to ogłoszenie?')) return;
+    if (!confirm('Na pewno usunąć to ogłoszenie wraz ze wszystkimi jego zdjęciami?')) return;
     try {
       const res = await fetch(`/api/cars/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('API DELETE failed');
