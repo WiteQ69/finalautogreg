@@ -6,6 +6,8 @@ import { useCarStore } from '@/store/car-store';
 import { SimpleCarCard } from '@/components/ui/simple-car-card';
 import type { Car } from '@/types/car';
 
+const SOLD_CARS_PAGE_SIZE = 6;
+
 function normStatus(v: unknown) {
   return String(v ?? '').trim().toLowerCase();
 }
@@ -14,6 +16,7 @@ export default function AutaPage() {
   const { setCars } = useCarStore();
   const [list, setList] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visibleSoldCount, setVisibleSoldCount] = useState(SOLD_CARS_PAGE_SIZE);
 
   useEffect(() => {
     let ignore = false;
@@ -83,12 +86,24 @@ export default function AutaPage() {
               <h2 className="text-3xl font-bold text-zinc-900">Sprzedane auta</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {soldCars.map((car, index) => (
+              {soldCars.slice(0, visibleSoldCount).map((car, index) => (
                 <motion.div key={car.id} layout>
                   <SimpleCarCard car={car} index={index} />
                 </motion.div>
               ))}
             </div>
+
+            {visibleSoldCount < soldCars.length && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setVisibleSoldCount((count) => count + SOLD_CARS_PAGE_SIZE)}
+                  className="rounded-xl bg-zinc-900 px-6 py-3 font-semibold text-white transition-colors hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2"
+                >
+                  Załaduj więcej
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
